@@ -1,0 +1,42 @@
+make: Nothing to be done for 'all'.
+openmp_pow: n = 112000, m = 100000, thread_count = 1
+Congratulations!
+Time Cost: 7774149 us
+
+openmp_pow: n = 112000, m = 100000, thread_count = 7
+Congratulations!
+Time Cost: 1268752 us
+
+openmp_pow: n = 112000, m = 100000, thread_count = 14
+Congratulations!
+Time Cost: 694593 us
+
+openmp_pow: n = 112000, m = 100000, thread_count = 28
+Congratulations!
+Time Cost: 341041 us
+
+mpi_pow: n = 112000, m = 100000, process_count = 1
+Congratulations!
+Time Cost: 7837182 us
+
+mpi_pow: n = 112000, m = 100000, process_count = 7
+Congratulations!
+Time Cost: 1348184 us
+
+mpi_pow: n = 112000, m = 100000, process_count = 14
+Congratulations!
+Time Cost: 748562 us
+
+mpi_pow: n = 112000, m = 100000, process_count = 28
+Congratulations!
+Time Cost: 391025 us
+
+mpi_pow: n = 112000, m = 100000, process_count = 56
+Congratulations!
+Time Cost: 228757 us
+
+mpi_pow: n = 112000, m = 100000, process_count = 112
+Congratulations!
+Time Cost: 131686 us
+
+All done!

@@ -20,5 +20,5 @@ clean:
 
 log: odd_even_sort
 	mpirun -n 2 ./odd_even_sort 10 input.txt &> run_error_log.txt
-	objdump -d -S -l odd_even_sort > objdump_log.txt
+	# objdump -d -S -l odd_even_sort > objdump_log.txt
 

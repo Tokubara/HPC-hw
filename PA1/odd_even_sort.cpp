@@ -26,6 +26,9 @@ void Worker::sort() {
 	MPI_Status status;
 	float* temp;
   int odd_rank, even_rank;
+	
+	std::sort(data, data+block_len);
+
   if (rank % 2 == 0) {
     odd_rank = rank - 1;
     even_rank = rank + 1;

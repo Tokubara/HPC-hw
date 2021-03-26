@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
 	localn = avgn;
 
 	data = (int*)malloc(sizeof(int) * n);
-	for (i = 0; i < n; i++) { // 手动制造数据
-	    data[i] = rand() % 100;  // 为什么%100? 为什么限制在100以内.
+	for (i = 0; i < n; i++) {   // 手动制造数据
+	    data[i] = rand() % 100; // 为什么%100? 为什么限制在100以内. 因为数据的规模在100以内.
 	}
 	printf("array data is:");
 	for (i = 0; i < n; i++) {
@@ -54,9 +54,9 @@ int main(int argc, char* argv[])
     printf("\n");
     sort(recdata, recdata + localn);
 
-		// {{{1 设置oddrank,evenrank, 也就是partner序号
+    // {{{1 设置oddrank,evenrank, 也就是partner序号
     //begin the odd-even sort
-    int oddrank, evenrank;  // 变量的含义是奇/偶时的partner, 
+    int oddrank, evenrank; // 变量的含义是奇/偶时的partner,
 
     if (rank % 2 == 0) {
 	oddrank = rank - 1; // 但是可能是-1
@@ -67,18 +67,21 @@ int main(int argc, char* argv[])
     }
     /* Set the ranks of the processors at the end of the linear */
     if (oddrank == -1 || oddrank == nump)
-	oddrank = MPI_PROC_NULL;  // 可以么?
+	oddrank = MPI_PROC_NULL; // 可以么?
     if (evenrank == -1 || evenrank == nump)
 	evenrank = MPI_PROC_NULL;
 
+    // {{{1 获取partner的长度
+    int odd_len, even_len; // 分别是odd/even partner的长度
+    MPI_Sendrecv(&localn, 1, MPI_INT, oddrank, 2, &odd_len, 1, MPI_INT, oddrank, 2, MPI_COMM_WORLD, &status);
+    MPI_Sendrecv(&localn, 1, MPI_INT, evenrank, 2, &even_len, 1, MPI_INT, evenrank, 2, MPI_COMM_WORLD, &status);
+
     int p;
-    for (p = 0; p < nump - 1; p++) { // 为什么只需要迭代固定次数?
-	if (p % 2 == 1) /* Odd phase */
-	    MPI_Sendrecv(recdata, localn, MPI_INT, oddrank, 1, recdata2,
-		localn, MPI_INT, oddrank, 1, MPI_COMM_WORLD, &status); // 所有进程都可以只用这个编号
-	else /* Even phase */
-	    MPI_Sendrecv(recdata, localn, MPI_INT, evenrank, 1, recdata2,
-		localn, MPI_INT, evenrank, 1, MPI_COMM_WORLD, &status);
+    for (p = 0; p < nump - 1; p++) {												 // 为什么只需要迭代固定次数?
+	if (p % 2 == 1)														 /* Odd phase */
+	    MPI_Sendrecv(recdata, localn, MPI_INT, oddrank, 1, recdata2, odd_len, MPI_INT, oddrank, 1, MPI_COMM_WORLD, &status); // 所有进程都可以只用这个编号
+	else															 /* Even phase */
+	    MPI_Sendrecv(recdata, localn, MPI_INT, evenrank, 1, recdata2, even_len, MPI_INT, evenrank, 1, MPI_COMM_WORLD, &status);
 
 	//extract localn after sorting the two
 	temp = (int*)malloc(localn * sizeof(int));
@@ -109,12 +112,18 @@ int main(int argc, char* argv[])
     }	  //for
 
     ierr = MPI_Gather(recdata, localn, MPI_INT, data, localn, MPI_INT, 0, MPI_COMM_WORLD);
+    int error = 0;
     if (rank == root_process) {
-	printf("final sorted data:");
-	for (i = 0; i < n; i++) {
-	    printf("%d ", data[i]);
+	for (int i = 0; i < n - 1; i++) {
+	    if (data[i] > data[i + 1]) {
+		error = 1;
+	    }
 	}
-	printf("\n");
+	    if (error == 1) {
+		puts("error");
+	    } else {
+		puts("ok");
+	    }
     }
 
     ierr = MPI_Finalize();

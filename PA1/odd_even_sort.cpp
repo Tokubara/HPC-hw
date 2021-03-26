@@ -43,8 +43,9 @@ void Worker::sort() {
   int LEN_TAG = 2;
   MPI_Sendrecv( & block_len, 1, my_MPI_SIZE_T, odd_rank, 2, & odd_len, 1, my_MPI_SIZE_T, odd_rank, LEN_TAG, MPI_COMM_WORLD, & status);
   MPI_Sendrecv( & block_len, 1, my_MPI_SIZE_T, even_rank, 2, & even_len, 1, my_MPI_SIZE_T, even_rank, LEN_TAG, MPI_COMM_WORLD, & status);
+	// odd_len与even_len可能是无效的
   // 开辟buffer, 用于存储buffer
-  float * partner_buffer = new float[std::max(odd_len, even_len)]; // 这里可以用堆,也可以用栈,但是怀疑栈有上限,堆没有上限,那就用堆?
+  float * partner_buffer = new float[ceiling(n, nprocs)]; // 这里可以用堆,也可以用栈,但是怀疑栈有上限,堆没有上限,那就用堆?
   temp = new float[block_len];
   for (int p = 0; p < nprocs - 1; p++) {
     size_t partner_len = (p % 2 == 1) ? odd_len : even_len;

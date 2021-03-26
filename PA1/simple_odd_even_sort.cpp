@@ -16,6 +16,7 @@ int main(int argc, char* argv[])
     int n, localn;
     int *data, recdata[100], recdata2[100];
     int* temp;
+		int* send_count, *displ;
     int ierr, i;
     int root_process;
     int sendcounts;
@@ -30,28 +31,29 @@ int main(int argc, char* argv[])
 	printf("please enter the number of numbers to sort: ");
 	fflush(stdout);
 	scanf("%i", &n);
-	int avgn = n / nump;
-	localn = (rank==nump-1)?(n-(nump-1)*avgn) :avgn;
 
 	data = (int*)malloc(sizeof(int) * n);
 	for (i = 0; i < n; i++) {   // 手动制造数据
-	    data[i] = rand() % 100; // 为什么%100? 为什么限制在100以内. 因为数据的规模在100以内.
+	    data[i] = rand() % 100; // 为什么%100? 为什么限制在100以内. 因为每个进程的数据的规模在100以内.
 	}
-	printf("array data is:");
-	for (i = 0; i < n; i++) {
-	    printf("%d ", data[i]);
-	}
-	printf("\n");
+	send_count = (int*) malloc(sizeof(int)*nump);
+    int avgn = n / nump;
+for (i = 0; i < nump; i++) { 
+	send_count[i] = avgn;
+}	
+send_count[nump-1]= (n - (nump - 1) * avgn);
+displ[0]=0;
+for(int i = 1; i < nump; i++) {
+	displ[i]=displ[i-1]+send_count[i-1];
+}
     } else {
 	data = NULL;
     }
-    ierr = MPI_Bcast(&localn, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    ierr = MPI_Scatter(data, localn, MPI_INT, &recdata, 100, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("%d:received data:", rank);
-    for (i = 0; i < localn; i++) {
-	printf("%d ", recdata[i]);
-    }
-    printf("\n");
+    int avgn = n / nump;
+    localn = (rank == nump - 1) ? (n - (nump - 1) * avgn) : avgn;
+    /* ierr = MPI_Bcast(&localn, 1, MPI_INT, 0, MPI_COMM_WORLD); */
+    ierr = MPI_Scatterv(data, send_count, displ, MPI_INT, &recdata, localn, MPI_INT, 0, MPI_COMM_WORLD); // 接受是100, 这说明, 100其实只是起了这么大buffer的作用, 只要有足够的buffer, 想多大就多大
+		//? 其它的没有开辟空间, 会不会出事啊?
     sort(recdata, recdata + localn);
 
     // {{{1 设置oddrank,evenrank, 也就是partner序号
@@ -111,7 +113,7 @@ int main(int argc, char* argv[])
 	} //else
     }	  //for
 
-    ierr = MPI_Gather(recdata, localn, MPI_INT, data, localn, MPI_INT, 0, MPI_COMM_WORLD);
+    ierr = MPI_Gatherv(recdata, localn, MPI_INT, data, send_count, displ, MPI_INT, 0, MPI_COMM_WORLD);
     int error = 0;
     if (rank == root_process) {
 	for (int i = 0; i < n - 1; i++) {
@@ -119,11 +121,11 @@ int main(int argc, char* argv[])
 		error = 1;
 	    }
 	}
-	    if (error == 1) {
-		puts("error");
-	    } else {
-		puts("ok");
-	    }
+	if (error == 1) {
+	    puts("error");
+	} else {
+	    puts("ok");
+	}
     }
 
     ierr = MPI_Finalize();

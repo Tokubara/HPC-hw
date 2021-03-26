@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 {
 
     int nump, rank;
-    int n, localn;
+    int n=33, localn;
     int *data, recdata[100], recdata2[100];
     int* temp;
 		int* send_count, *displ;
@@ -28,9 +28,9 @@ int main(int argc, char* argv[])
     ierr = MPI_Comm_size(MPI_COMM_WORLD, &nump);
 
     if (rank == root_process) {
-	printf("please enter the number of numbers to sort: ");
-	fflush(stdout);
-	scanf("%i", &n);
+	/* printf("please enter the number of numbers to sort: "); */
+	/* fflush(stdout); */
+	/* scanf("%i", &n); */
 
 	data = (int*)malloc(sizeof(int) * n);
 	for (i = 0; i < n; i++) {   // 手动制造数据
@@ -42,6 +42,7 @@ for (i = 0; i < nump; i++) {
 	send_count[i] = avgn;
 }	
 send_count[nump-1]= (n - (nump - 1) * avgn);
+displ = (int*) malloc(sizeof(int)*nump);
 displ[0]=0;
 for(int i = 1; i < nump; i++) {
 	displ[i]=displ[i-1]+send_count[i-1];

@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 	fflush(stdout);
 	scanf("%i", &n);
 	int avgn = n / nump;
-	localn = avgn;
+	localn = (rank==nump-1)?(n-(nump-1)*avgn) :avgn;
 
 	data = (int*)malloc(sizeof(int) * n);
 	for (i = 0; i < n; i++) {   // 手动制造数据

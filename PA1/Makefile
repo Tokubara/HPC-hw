@@ -1,4 +1,4 @@
-CFLAGS ?= -std=c++14 -O2 -Wall -Wextra -Werror -pedantic -DDEBUG
+CFLAGS ?= -std=c++14 -O0 -Wall -Wextra -Werror -pedantic -DDEBUG
 
 .PHONY: clean check_mpi
 
@@ -17,4 +17,8 @@ odd_even_sort: main.cpp worker.cpp odd_even_sort.cpp
 
 clean:
 	rm -f generate odd_even_sort
+
+log: odd_even_sort
+	mpirun -n 2 ./odd_even_sort 10 input.txt &> run_error_log.txt
+	objdump -d -S -l odd_even_sort > objdump_log.txt
 

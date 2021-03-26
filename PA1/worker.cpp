@@ -18,10 +18,13 @@ void Worker::input(const char *input_name) {
     // read 0 bytes is fine
     CHKERR(MPI_File_open(MPI_COMM_WORLD, input_name, MPI_MODE_RDONLY, MPI_INFO_NULL, &in_file));
     CHKERR(MPI_File_read_at_all(in_file, IO_offset * sizeof(float), (void *)data, block_len, MPI_FLOAT,
-                                MPI_STATUS_IGNORE));
+                                MPI_STATUS_IGNORE)); //? 为什么这里用的是MPI_File_read_at_all, 而不是MPI_File_read_at?
     CHKERR(MPI_File_close(&in_file));
 }
 
+/**
+ * 判断sort排序结果的正误
+ * */
 int Worker::check() {
     // directly skip if out of range
     if (out_of_range) return 1;
@@ -39,12 +42,12 @@ int Worker::check() {
         }
     }
     /** Check inter-process data */
-    float L = -1;
-    if (nprocs > 1) {
+    float L = -1; // 用于接收的buffer
+    if (nprocs > 1) { // i把排序的最后一段送到i+1的进程, 由于0只发, 最后一个只收, 因此需要单独处理
         if (rank == 0) {
-            MPI_Send(&data[block_len - 1], 1, MPI_FLOAT, rank + 1, 0, MPI_COMM_WORLD);
+            MPI_Send(&data[block_len - 1], 1, MPI_FLOAT, rank + 1, 0, MPI_COMM_WORLD); // 只发送最后一个, 发送到1
         } else if (this->last_rank) {
-            MPI_Recv(&L, 1, MPI_FLOAT, rank - 1, 0, MPI_COMM_WORLD, NULL);
+            MPI_Recv(&L, 1, MPI_FLOAT, rank - 1, 0, MPI_COMM_WORLD, NULL); // 从相邻的1个接收, 也就是倒数第二个
             if (L - data[0] > 1e-15) {
                 ret_val = -1;
 #ifndef NDEBUG

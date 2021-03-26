@@ -30,7 +30,7 @@
         int _errCode = (func);   \
         assertSuccess(_errCode); \
     }
-
+// 调用的例子为: CHKERR(MPI_File_open(MPI_COMM_WORLD, input_name, MPI_MODE_RDONLY, MPI_INFO_NULL, &in_file)); 接受一个函数调用, 如果返回正常(==MPI_SUCCESS), 那就跟直接调用函数没区别, 如果不是, 就得到错误字符串, 并且打印在文件中的位置
 template <typename T, typename P>
 inline T ceiling(T x, P y) {
     return (x + y - 1) / y;

@@ -29,7 +29,7 @@ for((i=0;i<${#srun_config[@]};i+=2)) do
 	nparam=${srun_config[$(($i+1))]}
 	printf "%d %d " $Nparam $nparam >> $result_file
 	srun -N $Nparam -n $nparam --cpu-bind sockets $job_name $num $data_file >> $result_file # 因为main中去掉了printf的\n
-	echo -e "\n" >> $result_file
+	echo >> $result_file
 done
 
 # {{{1 处理log结果

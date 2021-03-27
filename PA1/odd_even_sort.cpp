@@ -67,7 +67,7 @@ void Worker::sort() {
         data[k] = (j == partner_len || (i < block_len && temp[i] < partner_buffer[j])) ? temp[i++] : partner_buffer[j++];
       }
     } else {
-      int i, j, k; // 按理说也该用size_t, 但是需要-1
+      long i, j, k; // 按理说也该用size_t, 但是需要-1
       for (i = k = block_len - 1, j = partner_len - 1; k >= 0; k--) {
         data[k] = (j == -1 || (i >= 0 && temp[i] >= partner_buffer[j])) ? temp[i--] : partner_buffer[j--];
       }

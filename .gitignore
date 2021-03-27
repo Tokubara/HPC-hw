@@ -1,0 +1,11 @@
+**/*
+!PA1
+!PA0
+!**/*.c
+!**/*.cc
+!**/*.cpp
+!**/*.h
+!**/Makefile
+!**/makefile
+!**/*.sh
+!.gitignore

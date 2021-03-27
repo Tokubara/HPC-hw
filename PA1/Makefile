@@ -1,4 +1,10 @@
-CFLAGS ?= -std=c++14 -O0 -Wall -Wextra -Werror -pedantic -D NDEBUG
+CFLAGS ?= -std=c++14 -O0 -Wall -Wextra -Werror -pedantic
+ifdef DEBUG
+CFLAGS += -D DEBUG
+endif
+
+# $(info CFLAGS=$(CFLAGS))
+
 
 .PHONY: clean check_mpi
 

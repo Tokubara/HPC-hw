@@ -11,10 +11,10 @@
 
 # data_file=data/$1.dat
 
-declare -A srun_config
+declare -a srun_config
 srun_config=(1 1 1 2 1 4 1 16 2 32)
 for((i=1;i<=${#srun_config};i+=2)) do
-	echo ${srun_config[i]} ${srun_config[i+1]}
+	echo ${srun_config[$i]} ${srun_config[$(($i+1))]}
 done
 
 # run mpi_pow

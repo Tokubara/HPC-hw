@@ -8,6 +8,7 @@
 #include "worker.h"
 
 int main(int argc, char **argv) {
+	// {{{1 解析参数, 得到nprocs与rank
   MPI_Init(&argc, &argv);
   int nprocs, rank;
   CHKERR(MPI_Comm_size(MPI_COMM_WORLD, &nprocs));
@@ -33,9 +34,9 @@ int main(int argc, char **argv) {
   worker->input(input_name);
 
   /** Sort the list (input data) */
-  timeval start, end;
+  timeval start, end; // 大概是一种类型, 与gettimeofday配合
   unsigned long time;
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD); //? 作用是什么?
   gettimeofday(&start, NULL);
 
   // run your code
@@ -48,7 +49,7 @@ int main(int argc, char **argv) {
   /** Check the sorted list */
   int ret = worker->check();
   if (ret > 0) {
-    printf("Rank %d: pass\n", rank);
+    /* printf("Rank %d: pass\n", rank); */
   } else {
     printf("Rank %d: failed\n", rank);
   }

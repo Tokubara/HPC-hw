@@ -1,4 +1,4 @@
-CFLAGS ?= -std=c++14 -O0 -Wall -Wextra -Werror -pedantic -DDEBUG
+CFLAGS ?= -std=c++14 -O0 -Wall -Wextra -Werror -pedantic -D NDEBUG
 
 .PHONY: clean check_mpi
 

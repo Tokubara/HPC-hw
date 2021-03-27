@@ -1,5 +1,7 @@
+BEGIN {
+	valid_row_num=0	
+}
 {
-	valid_row_num=0
 	if(NF==3) {
 		valid_row_num+=1
 		N[valid_row_num]=$1
@@ -12,6 +14,6 @@
 }
 END {
 	for(i=1;i<=valid_row_num;i++) {
-		printf "N=%d,P=%d,runtime=%fms,ratio=%f\n",N[i],n[i]/N[i],runtime[i],runtime[i]/runtime[valid_row_num]
+		printf "N=%d,P=%d,runtime=%fms,speedup=%f\n",N[i],n[i]/N[i],runtime[i],runtime[1]/runtime[i]
 	}
 }

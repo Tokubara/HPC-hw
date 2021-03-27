@@ -12,10 +12,14 @@ job_name=./odd_even_sort
 num=100000000
 data_file=data/$num.dat
 
+declare -a run_time
+
 declare -a srun_config
 srun_config=(1 1 1 2 1 4 1 16 2 32)
 for((i=0;i<${#srun_config[@]};i+=2)) do
-	echo srun -N ${srun_config[$i]} -n ${srun_config[$(($i+1))]} --cpu-bind sockets $job_name $num $data_file
+	# run_time[$i]=$(srun -N ${srun_config[$i]} -n ${srun_config[$(($i+1))]} --cpu-bind sockets $job_name $num $data_file)
+	# echo srun -N ${srun_config[$i]} -n ${srun_config[$(($i+1))]} --cpu-bind sockets $job_name $num $data_file
+	printf "N=%d,P=%d: \n" ${srun_config[$i]} $((${srun_config[$(($i+1))]}/${srun_config[$i]}))
 done
 
 # run mpi_pow

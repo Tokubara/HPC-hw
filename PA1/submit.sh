@@ -11,7 +11,7 @@ job_name=./odd_even_sort
 
 num=100000000
 data_file=data/$num.dat
-if ! [[ -d log ]] then
+if ! [[ -d log ]]; then
 	mkdir log
 fi
 result_file=log/result_$num_log.txt

@@ -1,4 +1,4 @@
-CXXFLAGS ?= -std=c++17 -fopenmp -O2 -g3 -Wall -Wextra -Werror -pedantic
+CXXFLAGS ?= -std=c++17 -fopenmp -O2 -g3 -Wall -Wextra -pedantic
 
 headers := $(wildcard *.h)
 common_src := bfs_common.cpp graph.cpp
@@ -19,6 +19,9 @@ endif
 
 test: test.c
 	@gcc -O0 -g test.c -o test
+
+run:
+	./bfs_omp &> log/run_log.txt
 
 clean:
 	rm -rf bfs_omp bfs_omp_mpi *~ *.*~

@@ -8,6 +8,13 @@
 #define ROOT_NODE_ID 0
 #define NOT_VISITED_MARKER -1 // 是-1是因为如果两点之间不存在, 就会是-1
 
+void omp_top_down_step(Graph g, vertex_set *frontier, vertex_set *new_frontier, int *distances);
+
+extern void vertex_set_clear(vertex_set *list);
+
+// vertex_set_init(&list1, graph->num_nodes);
+extern void vertex_set_init(vertex_set *list, int count);
+
 void bfs_omp(Graph graph, solution *sol) {
   vertex_set list1;
   vertex_set list2;

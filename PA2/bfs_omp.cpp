@@ -73,14 +73,15 @@ void bfs_bottom_up(graph* graph, solution* sol)
     
     memset(frontier->vertices, 0, sizeof(int) * graph->num_nodes); // 看框架, 感觉这是不需要的, 而且似乎可以直接用sizeof(graph->num_nodes)
             
+		memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
     // setup frontier with the root node    
     // just like put the root into queue
     frontier->vertices[frontier->count++] = 1;
 
     // set the root distance with 0
-    // sol->distances[ROOT_NODE_ID] = 0;
-    for (int i=0; i<graph->num_nodes; i++)
-        sol->distances[i] = 0;
+    sol->distances[ROOT_NODE_ID] = 0;
+    /* for (int i=0; i<graph->num_nodes; i++) */
+    /*     sol->distances[i] = 0; //? 怎么能初始化为1? 难道不应该是-1么? */
 
     
     // printf("!!!!!!!!!!!!!!!!!!!!fro2: %-10d\n", frontier->count);
@@ -186,6 +187,7 @@ void bfs_hybrid(graph* graph, solution* sol) {
 
     frontier->vertices[frontier->count++] = 1;
 
+		memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
     // set the root distance with 0
     sol->distances[ROOT_NODE_ID] = 0;
     

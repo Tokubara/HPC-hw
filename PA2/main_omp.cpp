@@ -15,6 +15,9 @@
 #define USE_BINARY_GRAPH 1 // 用二进制图格式, 还是文本图格式
 
 void bfs_top_down(Graph graph, solution *sol);
+void bfs_hybrid(Graph graph, solution *sol);
+void bfs_bottom_up(Graph graph, solution *sol);
+
 
 int main(int argc, char **argv) {
 
@@ -51,7 +54,7 @@ int main(int argc, char **argv) {
   sol1.distances = (int *)malloc(sizeof(int) * g->num_nodes); // 存放答案的地方
   solution sol2;
   sol2.distances = (int *)malloc(sizeof(int) * g->num_nodes);
-  bfs_top_down(g, &sol1);
+  bfs_bottom_up(g, &sol1);
   bfs_serial(g, &sol2); // 标准答案, 用于对拍
   for (int j = 0; j < g->num_nodes; j++) {
     if (sol1.distances[j] != sol2.distances[j]) {
@@ -66,7 +69,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < repeat; ++i) { // 这里专门用来测时间的?
     timeval start, end;
     gettimeofday(&start, NULL);
-    bfs_top_down(g, &sol2);
+    bfs_bottom_up(g, &sol2);
     gettimeofday(&end, NULL);
     total_time +=
         1000000.0 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;

@@ -10,7 +10,7 @@ make -j 4
 
 # {{{1 输入
 job_name=./odd_even_sort
-num=100000000
+num=${NUM:-100000000}
 data_file=data/$num.dat
 
 # {{{1 输出文件的位置

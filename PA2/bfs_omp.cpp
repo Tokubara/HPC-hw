@@ -58,10 +58,10 @@ void omp_top_down_step(Graph g, vertex_set *frontier, vertex_set *new_frontier,
       int outgoing = g->outgoing_edges[neighbor];
 
       if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
-        int index = new_frontier->count+1;
-        new_frontier->vertices[index] = outgoing;
-#pragma omp atomic
-				new_frontier->count++;
+				#pragma omp critical
+				{
+        new_frontier->vertices[new_frontier->count++] = outgoing;
+				}
       }
     }
   }

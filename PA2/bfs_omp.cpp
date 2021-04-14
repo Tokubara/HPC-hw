@@ -45,6 +45,7 @@ void bfs_omp(Graph graph, solution *sol) {
 void omp_top_down_step(Graph g, vertex_set *frontier, vertex_set *new_frontier,
                    int *distances) {
 
+#pragma omp parallel for
   for (int i = 0; i < frontier->count; i++) {
 
     int node = frontier->vertices[i];
@@ -53,13 +54,14 @@ void omp_top_down_step(Graph g, vertex_set *frontier, vertex_set *new_frontier,
     int end_edge = (node == g->num_nodes - 1) ? g->num_edges
                                               : g->outgoing_starts[node + 1];
 
-#pragma omp parallel for
     for (int neighbor = start_edge; neighbor < end_edge; neighbor++) {
       int outgoing = g->outgoing_edges[neighbor];
 
       if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
-        int index = new_frontier->count++;
+        int index = new_frontier->count+1;
         new_frontier->vertices[index] = outgoing;
+#pragma omp atomic
+				new_frontier->count++;
       }
     }
   }

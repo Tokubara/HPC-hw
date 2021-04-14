@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     printf("Loading graph...\n");
   }
   if (USE_BINARY_GRAPH) {
-    g = load_graph_binary(graph_filename.c_str());
+    g = load_graph_binary(graph_filename.c_str()); // 也就是说, 每个进程都有完整的图
   } else {
     if (rank == 0) {
       g = load_graph(argv[1]);
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
   }
   MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
   if (correct != 1) {
-    MPI_Finalize();
+    MPI_Finalize(); // 也就是说, MPI_Finalize必须是在多个进程中调用的
     exit(1);
   }
 

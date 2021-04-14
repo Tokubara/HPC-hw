@@ -153,10 +153,21 @@ void bfs_top_down(graph* graph, solution* sol) {
     vertex_set_init(&list1, graph->num_nodes);    
     int iteration = 1; // 为什么是1, 因为初始化present为0, 如果初始化为-1, 就可以是0
     vertex_set* frontier = &list1;
-    memset(frontier->vertices, 0, sizeof(int) * graph->num_nodes);
+
+		int len=graph->num_nodes;
+		int i;
+		#pragma parallel for
+		for(i=0; i<len;i++) {
+			frontier->vertices[i]=0;
+		}
+		#pragma parallel for
+		for(i=0; i<len;i++) {
+			sol->distances[i]=-1;
+		}
+
+	 	// memset(frontier->vertices, 0, sizeof(int) * graph->num_nodes);
+		// memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
     frontier->vertices[frontier->count++] = iteration;
-    // set the root distance with 0
-		memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
     sol->distances[ROOT_NODE_ID] = 0;    
     // just like pop the queue
     while (frontier->count != 0) {

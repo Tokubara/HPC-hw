@@ -20,8 +20,8 @@ endif
 test: test.c
 	@gcc -O0 -g test.c -o test
 
-run:
-	./bfs_omp &> log/run_log.txt
+run: bfs_omp
+	bash run_bfs_omp.sh
 
 clean:
 	rm -rf bfs_omp bfs_omp_mpi *~ *.*~

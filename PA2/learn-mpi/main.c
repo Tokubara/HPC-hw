@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     fprintf(stderr, "This program needs an even number of processes\n");
     return -1;
   }
-  int color, colors = 2; //? 两个相似变量名的区别是什么? 第一个color是split用来创建通信域的
+  int color;
   // {{{1 创建两个子通信域
   MPI_Comm split_half_comm;
   int mydata = procno;
@@ -94,6 +94,7 @@ int main(int argc, char** argv)
             "Got inter communication from unexpected %d; s/b %d\n", inter_source, local_number_of_other_leader);
     }
   }
+  // {{{2 bcast操作
   int root;
   int bcast_data = procno;
   if (color == 0) { // sending group: the local leader sends
@@ -101,12 +102,13 @@ int main(int argc, char** argv)
       root = MPI_ROOT;
     else
       root = MPI_PROC_NULL;
-  } else { // receiving group: everyone indicates leader of other group root = local_number_of_other_leader;
+  } else { // receiving group: everyone indicates leader of other group
+    root = local_number_of_other_leader;
   }
   if (DEBUG)
     fprintf(stderr, "[%d] using root value %d\n", procno, root);
   MPI_Bcast(&bcast_data, 1, MPI_INT, root, intercomm); //? 这个效果是啥? 这个函数和其它函数一样, 应该不会专门为intercomm设计吧, 但这样就与点对点通信完全没差别了
-  fprintf(stderr, "[%d] bcast data: %d\n", procno, bcast_data);
+  fprintf(stderr, "color=%d, [%d] bcast data: %d\n", color, procno, bcast_data);
   // 如果真的没差别, 应该只会输出两次
   if (procno == 0)
     fprintf(stderr, "Finished\n");

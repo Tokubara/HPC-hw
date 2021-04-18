@@ -18,7 +18,7 @@ ifeq ($(shell which mpicxx),)
 endif
 
 test: test.c
-	@gcc -O0 -g test.c -o test
+	mpicc -O0 -g test.c -o test
 
 run: bfs_omp
 	bash run_bfs_omp.sh

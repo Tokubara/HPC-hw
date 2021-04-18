@@ -14,7 +14,19 @@
 
 #define USE_BINARY_GRAPH 1 // 用二进制图格式, 还是文本图格式
 
-void bfs_omp(Graph graph, solution *sol);
+void bfs_top_down(Graph graph, solution *sol);
+void bfs_hybrid(Graph graph, solution *sol);
+void bfs_bottom_up(Graph graph, solution *sol);
+
+#if M==1
+#define bfs_omp bfs_bottom_up
+#elif M==2
+#define bfs_omp bfs_hybrid
+#else
+#define bfs_omp bfs_top_down
+#endif
+
+#define literal(x) #x
 
 int main(int argc, char **argv) {
 
@@ -71,7 +83,7 @@ int main(int argc, char **argv) {
     total_time +=
         1000000.0 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
   }
-  printf("Average execution time of function bfs_omp is %lf ms.\n",
+  printf("Average execution time of function " literal(bfs_omp) " is %lf ms.\n",
          total_time / 1000.0 / repeat);
 
   return 0;

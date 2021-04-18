@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifndef DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #endif
 int main(int argc, char** argv)
 {
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     fprintf(stderr,
         "[%d] invalid local member: %d\n",
         procno, local_leader_in_inter_comm);
-    MPI_Abort(2, comm);
+    // MPI_Abort(2, comm);
   }
   int
       global_rank_of_other_leader

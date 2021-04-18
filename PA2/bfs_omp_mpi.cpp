@@ -32,21 +32,21 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   int endp_st = row_no * n_proc;
   int endp_end = endp_st + row_num; // 负责的终点的范围, 右开
   // {{{1 创建xk, visited数组(长度与xk一样)
-  int* xk = (*int)malloc(sizeof(int) * col_num);         // 这里我开始写的是row_num
-  memset(xk, 0, sizeof(int) * col_num);                  //? 这里可不可以是sizeof(xk)?
-  int* new_xk = (*int)malloc(sizeof(int) * row_num);     // 这是后面存矩阵计算结果的地方, 但它和xk大小本来就不一样,  不初始化, 因为每一次循环开始时会初始化
+  bool* xk = (*bool)malloc(sizeof(bool) * col_num);         // 这里我开始写的是row_num
+  memset(xk, 0, sizeof(bool) * col_num);                  //? 这里可不可以是sizeof(xk)?
+  bool* new_xk = (*bool)malloc(sizeof(bool) * row_num);     // 这是后面存矩阵计算结果的地方, 但它和xk大小本来就不一样,  不初始化, 因为每一次循环开始时会初始化
   bool* visited = (*bool)malloc(sizeof(bool) * col_num); // visited是矩阵计算中会使用的
   memset(visited, -1, sizeof(bool) * col_num);
   bool update = false;
   // {{{1 初始化xk(就是src点), 相当于第一次迭代
-  xk[ROOT_NODE_ID] = col_no == 0 ? 1 : 0;
+  xk[ROOT_NODE_ID] = col_no == 0 ? true : false;
   sol.distances[ROOT_NODE_ID] = 0;
   int iter = 1;
   // {{{1 while循环
   while (true) {
     // {{{2 矩阵运算
     update = false;
-    memset(new_xk, 0, sizeof(int) * row_num);
+    memset(new_xk, 0, sizeof(bool) * row_num);
     for (int i = 0; i < row_num; i++) { //? 这个循环范围应该是什么, 是end, 注意, 得到的结果的向量长度是与终点范围一样多的
       // [endp_st, endp_end)
       // 外层循环, 计算new_xk[i]
@@ -57,7 +57,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       for (int neighbor = start_edge; neighbor < end_edge; neighbor++) {
         int incoming = g->incoming_edges[neighbor];                              // incoming是起点
         if (incoming >= stp_st && incoming < stp_end && xk[incoming - stp_st]) { // 如果这样写条件判断, 好像就不需要每次让xk为0,1向量了, >0就行了
-          new_xk[i] = 1;
+          new_xk[i] = true;
           update = true;
           break;
         }
@@ -69,23 +69,23 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       break;
     }
     // {{{2 new_xk和distance, 还有visited的维护
-    MPI_Reduce(MPI_IN_PLACE, new_xk, row_num, MPI_INT, MPI_SUM, row_no, row_comm); // 接收方是对角线
+    MPI_Reduce(MPI_IN_PLACE, new_xk, row_num, MPI_BOOL, MPI_BOR, row_no, row_comm); // 接收方是对角线
     if (col_no == row_no) {                                                        // 这就是leader
       for (int i = 0; i < row_num; i++) {
         // {{{2 leader更新visited, sol
-        if (new_xk[i] > 0) {
+        if (new_xk[i]) {
           ASSERT(!visited[i]);
           visited[i] = true;
           sol.distances[i + endp_st] = iter; //? 这里会不会有data race?我觉得不会
         }
       }
       // TODO 也可以考虑先allreduce, 再每一个计算
-      memcpy(xk, new_xk, sizeof(int) * row_num);
+      memcpy(xk, new_xk, sizeof(bool) * row_num);
           // TODO Bcast visited
           // {{{2 leader bcast send
     }
       MPI_Bcast(visited, row_num, MPI_BOOL, row_no, row_comm); //? 这个地方总感觉有错?
-      MPI_Bcast(xk, col_num, MPI_INT, col_no, col_comm); //? 这个地方总感觉有错?
+      MPI_Bcast(xk, col_num, MPI_BOOL, col_no, col_comm); //? 这个地方总感觉有错?
       iter++;
   }
   // {{{1 清理工作

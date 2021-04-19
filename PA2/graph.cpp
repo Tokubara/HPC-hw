@@ -18,6 +18,7 @@ void free_graph(Graph graph) {
   free(graph);
 }
 
+// 用于load_graph, 读取scratch的前节点个数那么多书, 这存的是outgoing_starts数组
 void build_start(Graph graph, int *scratch) {
   int num_nodes = graph->num_nodes;
   graph->outgoing_starts = (int *)malloc(sizeof(int) * num_nodes);
@@ -159,6 +160,7 @@ void get_meta_data(std::ifstream &file, Graph graph) {
   graph->num_edges = atoi(buffer.c_str());
 }
 
+// 读文件, 跳过第一个字符是#的行, 读数, 存入scratch
 void read_graph_file(std::ifstream &file, int *scratch) {
   std::string buffer;
   int idx = 0;
@@ -166,7 +168,7 @@ void read_graph_file(std::ifstream &file, int *scratch) {
     buffer.clear();
     std::getline(file, buffer);
 
-    if (buffer.size() > 0 && buffer[0] == '#')
+    if (buffer.size() > 0 && buffer[0] == '#') // 可以跳过注释
       continue;
 
     std::stringstream parse(buffer);
@@ -283,6 +285,8 @@ Graph load_graph_binary(const char *filename) {
   return graph;
 }
 
+/* 在graph有num_nodes, num_edges, outgoing等信息下, 写二进制文件, filename是path
+ * */
 void store_graph_binary(const char *filename, Graph graph) {
 
   FILE *output = fopen(filename, "wb");

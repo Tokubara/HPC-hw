@@ -24,8 +24,11 @@ gen: gen_graph.cpp $(common_src)
 test: test.c
 	mpicc -O0 -g test.c -o test
 
-run: bfs_omp
-	bash run_bfs_omp.sh
+run: $(.DEFAULT_GOAL)
+	mpirun --oversubscribe -np 4 $< ../graph/9p8e.graph
+# bash run_bfs_omp.sh
+
+.DEFAULT_GOAL=bfs_omp_mpi
 
 clean:
 	rm -rf bfs_omp bfs_omp_mpi *~ *.*~

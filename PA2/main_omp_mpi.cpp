@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
         break;
       }
     }
+    puts("no difference");
   }
   MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
   if (correct != 1) {

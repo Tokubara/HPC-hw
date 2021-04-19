@@ -22,9 +22,12 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   // 4 5 6 7...
   int col_no = rank % m_size; // 这也是col_color
   int row_no = rank / m_size; // 这也是row_color
-  MPI_Comm col_comm, row_comm;
+  MPI_Comm col_comm, row_comm, diag_comm;
   MPI_Comm_split(MPI_COMM_WORLD, col_no, row_no, &col_comm); // 注意这里的key并不是原来的rank, 而是行号, 也就是说, 应该在0到m_size之间, split以后, 都以为自己在这个通信域中, 只是不同的进程, 这个变量中包含的进程不同
   MPI_Comm_split(MPI_COMM_WORLD, row_no, col_no, &row_comm);
+  int diag_color=col_no==row_no;
+  MPI_Comm_split(MPI_COMM_WORLD, diag_color, col_no, &diag_comm);
+
   // {{{1 本进程矩阵大小, 和负责的点的范围
   int n_proc = (graph->num_nodes + m_size - 1) / m_size; // 每行每列进程最多负责的点数, 但是最后一行/列进程负责的点数不一样多
   // 矩阵大小, row_num*col_num
@@ -96,7 +99,16 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       MPI_Bcast(xk, col_num, MPI_C_BOOL, col_no, col_comm); //? 这个地方总感觉有错?
       iter++;
   }
+  // {{{1 gatherv
+  if(rank==ROOT_NODE_ID) {
+    MPI_Reduce(MPI_IN_PLACE, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, diag_comm); // 接收方是对角线
+  } else if(col_no==row_no) {
+    MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, diag_comm); // 接收方是对角线
+  }
   // {{{1 清理工作
+  MPI_Comm_free(&row_comm);
+  MPI_Comm_free(&col_comm);
+  MPI_Comm_free(&diag_comm);
   free(xk);
   free(new_xk);
   free(visited);

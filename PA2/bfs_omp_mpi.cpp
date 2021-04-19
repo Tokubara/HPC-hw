@@ -45,8 +45,9 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   memset(visited, 0, sizeof(bool) * col_num);
   memset(sol->distances, -1, sizeof(int)*graph->num_nodes);
   bool update = false;
-  // {{{1 初始化xk(就是src点), 相当于第一次迭代
+  // {{{1 初始化xk和visited(就是src点), 相当于第一次迭代
   xk[ROOT_NODE_ID] = col_no == 0 ? true : false;
+  visited[ROOT_NODE_ID] = col_no == 0 ? true : false;
   sol->distances[ROOT_NODE_ID] = 0;
   int iter = 1;
   // {{{1 while循环

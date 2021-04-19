@@ -73,7 +73,11 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       break;
     }
     // {{{2 new_xk和distance, 还有visited的维护
-    MPI_Reduce(MPI_IN_PLACE, new_xk, row_num, MPI_C_BOOL, MPI_LOR, row_no, row_comm); // 接收方是对角线
+    if(col_no==row_no) {
+      MPI_Reduce(MPI_IN_PLACE, new_xk, row_num, MPI_C_BOOL, MPI_LOR, row_no, row_comm); // 接收方是对角线
+    } else {
+      MPI_Reduce(new_xk, new_xk, row_num, MPI_C_BOOL, MPI_LOR, row_no, row_comm); // 接收方是对角线
+    }
     if (col_no == row_no) {                                                        // 这就是leader
       for (int i = 0; i < row_num; i++) {
         // {{{2 leader更新visited, sol

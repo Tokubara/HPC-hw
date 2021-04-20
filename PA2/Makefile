@@ -5,6 +5,10 @@ common_src := bfs_common.cpp graph.cpp
 
 .PHONY: clean check_mpi
 
+N := 4
+n := 100
+graph := 68m.graph
+
 bfs_omp_mpi: main_omp_mpi.cpp bfs_omp_mpi.cpp $(common_src)
 	mpicxx $(CXXFLAGS) -o $@ $^
 
@@ -29,7 +33,7 @@ run: $(.DEFAULT_GOAL)
 # bash run_bfs_omp.sh
 
 rrun: $(.DEFAULT_GOAL)
-	srun -N 1 -n 25 $< $(graph)
+	srun -N $(N) -n $(n) $< /home/course/hpc/assignments/2021/PA2/graph/$(graph)
 
 .DEFAULT_GOAL=bfs_omp_mpi
 

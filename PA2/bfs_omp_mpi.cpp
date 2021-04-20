@@ -41,8 +41,9 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   // {{{1 创建xk, visited, new_xk数组(长度与xk一样)
   int* xk = (int*)malloc(sizeof(int) * col_num);         // 用稀疏存法, 只存非0下标
   int xk_len=0;
+  int our_xk_len;
   int* new_xk = (int*)malloc(sizeof(int) * row_num); 
-  int new_xk_len = 0;
+  int new_xk_len;
   bool* visited = (bool*)malloc(sizeof(bool) * row_num); // visited是矩阵计算中会使用的, 并且不会通信, 每个进程各自算
   // {{{1 唯二需要memset的:visited, sol->distances
   memset(visited, 0, sizeof(bool) * row_num);
@@ -66,24 +67,24 @@ void bfs_omp_mpi(Graph graph, solution* sol)
     xk[xk_len++]=ROOT_NODE_ID;
     visited[ROOT_NODE_ID] = true;
   }
-  sol->distances[ROOT_NODE_ID] = 0; // 其它的进程本来也不会负责这部分
+  sol->distances[ROOT_NODE_ID] = 0; // 虽然其它的进程本来也不会负责这部分
   int iter = 1;
-  MPI_Request request_col = MPI_REQUEST_NULL;
-  MPI_Request request_row = MPI_REQUEST_NULL;
   while (true) {
-    // {{{1 矩阵运算
+    // {{{1 while的初始化
+    MPI_Request request_col = MPI_REQUEST_NULL;
+    MPI_Request request_row = MPI_REQUEST_NULL;
     new_xk_len = 0;
+    // {{{1 矩阵运算
 // #pragma omp parallel for // 在这里会有new_xk_len数据竞争的问题, 用临界区大概会更慢 
     // TODO 看看这里xk_len是不是正确设置了
     for (int i = 0; i < xk_len; i++) { //? 这个循环范围应该是什么, 是end, 注意, 得到的结果的向量长度是与终点范围一样多的
       // [endp_st, endp_end)
       // 外层循环, 计算new_xk[i]
       int out_point = xk[i];
-      int start_edge = g->outgoing_starts[out_point];
-      int end_edge = (out_point == g->num_nodes-1) ? g->num_edges : g->outgoing_starts[out_point+1];
+      int start_edge = graph->outgoing_starts[out_point];      int end_edge = (out_point == graph->num_nodes-1) ? graph->num_edges : graph->outgoing_starts[out_point+1];
       for (int neighbor=start_edge; neighbor<end_edge; neighbor++) {
         // TODO 看看这里visited设置好没有
-        int outgoing = g->outgoing_edges[neighbor];
+        int outgoing = graph->outgoing_edges[neighbor];
         if(outgoing>=endp_st && outgoing < endp_end && !visited[outgoing-endp_st]) {
           new_xk[new_xk_len++]=outgoing;
         }
@@ -112,12 +113,12 @@ void bfs_omp_mpi(Graph graph, solution* sol)
     if (col_no == row_no) {                                                        // 这就是leader
       // {{{2 处理new_xk
       std::sort(send_buf, send_buf+recvcount_sum);
-      xk_len=(int*)std::unique(send_buf, send_buf+recvcount_sum)-send_buf;
+      our_xk_len=xk_len=(int*)std::unique(send_buf, send_buf+recvcount_sum)-send_buf;
      }
-    MPI_Bcast(&xk_len, 1, MPI_INT, row_no, row_comm);
+    MPI_Bcast(&our_xk_len, 1, MPI_INT, row_no, row_comm); // 为了知道send_buf有多大
     // xk_len不能是异步的吧, 否则接收方都不知道要接受多大
-    MPI_Ibcast(send_buf, xk_len, MPI_INT, row_no, row_comm, &request_row); // send_buf用于设置visited
-    if (col_no == row_no) {                                                        // 这就是leader
+    MPI_Ibcast(send_buf, our_xk_len, MPI_INT, row_no, row_comm, &request_row); // send_buf用于设置visited
+    if (col_no == row_no) {
       memcpy(xk,send_buf,xk_len*sizeof(int)); 
       for(int i = 0; i<xk_len; i++) {
         sol->distances[send_buf[i]]=iter;
@@ -126,7 +127,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
     MPI_Bcast(&xk_len, 1, MPI_INT, col_no, col_comm);
     MPI_Ibcast(xk, xk_len, MPI_INT, col_no, col_comm, &request_col); // TODO 看看改成异步的
     MPI_Wait(&request_row, MPI_STATUSES_IGNORE);
-    for(int i = 0; i<xk_len; i++) {
+    for(int i = 0; i<our_xk_len; i++) {
       visited[send_buf[i]-endp_st]=true;
     }
     MPI_Wait(&request_col, MPI_STATUSES_IGNORE);

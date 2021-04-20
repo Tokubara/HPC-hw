@@ -87,21 +87,21 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  int repeat = 10;
-  unsigned long total_time = 0.0;
-  for (int i = 0; i < repeat; ++i) {
-    timeval start, end;
-    MPI_Barrier(MPI_COMM_WORLD);
-    gettimeofday(&start, NULL);
-    bfs_omp_mpi(g, &sol1);
-    MPI_Barrier(MPI_COMM_WORLD);
-    gettimeofday(&end, NULL);
-    total_time +=
-        1000000.0 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
-  }
-  if (rank == 0)
-    printf("Average execution time of function bfs_omp_mpi is %lf ms.\n",
-           total_time / 1000.0 / repeat);
+  // int repeat = 10;
+  // unsigned long total_time = 0.0;
+  // for (int i = 0; i < repeat; ++i) {
+  //   timeval start, end;
+  //   MPI_Barrier(MPI_COMM_WORLD);
+  //   gettimeofday(&start, NULL);
+  //   bfs_omp_mpi(g, &sol1);
+  //   MPI_Barrier(MPI_COMM_WORLD);
+  //   gettimeofday(&end, NULL);
+  //   total_time +=
+  //       1000000.0 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
+  // }
+  // if (rank == 0)
+  //   printf("Average execution time of function bfs_omp_mpi is %lf ms.\n",
+  //          total_time / 1000.0 / repeat);
 
   MPI_Finalize();
   return 0;

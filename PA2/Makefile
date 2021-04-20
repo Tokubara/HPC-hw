@@ -25,8 +25,11 @@ test: test.c
 	mpicc -O0 -g test.c -o test
 
 run: $(.DEFAULT_GOAL)
-	mpirun --oversubscribe -np 4 $< ../graph/500k.graph
+	mpirun --oversubscribe -np 4 $< ../graph/68m.graph
 # bash run_bfs_omp.sh
+
+rrun: $(.DEFAULT_GOAL)
+	srun -N 1 -n 25 $< $(graph)
 
 .DEFAULT_GOAL=bfs_omp_mpi
 

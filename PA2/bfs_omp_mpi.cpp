@@ -41,8 +41,8 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   bool* xk = (bool*)malloc(sizeof(bool) * col_num);         // 这里我开始写的是row_num
   memset(xk, 0, sizeof(bool) * col_num);                  //? 这里可不可以是sizeof(xk)?
   bool* new_xk = (bool*)malloc(sizeof(bool) * row_num);     // 这是后面存矩阵计算结果的地方, 但它和xk大小本来就不一样,  不初始化, 因为每一次循环开始时会初始化
-  bool* visited = (bool*)malloc(sizeof(bool) * col_num); // visited是矩阵计算中会使用的
-  memset(visited, 0, sizeof(bool) * col_num);
+  bool* visited = (bool*)malloc(sizeof(bool) * row_num); // visited是矩阵计算中会使用的
+  memset(visited, 0, sizeof(bool) * row_num);
   memset(sol->distances, -1, sizeof(int)*graph->num_nodes);
   bool update = false;
   // {{{1 初始化xk和visited(就是src点), 相当于第一次迭代

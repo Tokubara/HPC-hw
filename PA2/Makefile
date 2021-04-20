@@ -25,8 +25,8 @@ endif
 gen: gen_graph.cpp $(common_src)
 	g++ -g -O0 -o $@ $^
 
-test: test.c
-	mpicc -O0 -g test.c -o test
+test: test.cpp
+	g++ -O0 -g $< -o $@
 
 runm: bfs_omp_mpi
 	bash ./run_bfs_mpi.sh

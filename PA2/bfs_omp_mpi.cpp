@@ -83,13 +83,15 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       // [endp_st, endp_end)
       // 外层循环, 计算new_xk[i]
       int out_point = xk[i];
-      int start_edge = graph->outgoing_starts[out_point];      int end_edge = (out_point == graph->num_nodes-1) ? graph->num_edges : graph->outgoing_starts[out_point+1];
+      int start_edge = graph->outgoing_starts[out_point];      
+      int end_edge = (out_point == graph->num_nodes-1) ? graph->num_edges : graph->outgoing_starts[out_point+1];
       for (int neighbor=start_edge; neighbor<end_edge; neighbor++) {
         // TODO 看看这里visited设置好没有
         int outgoing = graph->outgoing_edges[neighbor];
         if(outgoing>=endp_st && outgoing < endp_end && !visited[outgoing-endp_st]) {
           assert(new_xk_len<row_num);
           new_xk[new_xk_len++]=outgoing;
+          visited[outgoing-endp_st]=true;
         }
       }
     }

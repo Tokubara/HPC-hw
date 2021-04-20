@@ -1,4 +1,4 @@
-CXXFLAGS ?= -std=c++17 -fopenmp -O0 -g3 -Wall -Wextra -pedantic
+override CXXFLAGS += -std=c++17 -fopenmp -O2 -g3 -Wall -Wextra -pedantic
 
 headers := $(wildcard *.h)
 common_src := bfs_common.cpp graph.cpp
@@ -28,13 +28,12 @@ gen: gen_graph.cpp $(common_src)
 test: test.c
 	mpicc -O0 -g test.c -o test
 
-run: $(.DEFAULT_GOAL)
-	mpirun --oversubscribe -np 4 $< ../graph/68m.graph
-# bash run_bfs_omp.sh
-
-rrun: $(.DEFAULT_GOAL)
+runm: bfs_omp_mpi
 	bash ./run_bfs_mpi.sh
 	# srun -N $(N) -n $(n) $< /home/course/hpc/assignments/2021/PA2/graph/$(graph)
+
+runo: bfs_omp
+	bash ./run_bfs_omp.sh
 
 .DEFAULT_GOAL=bfs_omp_mpi
 

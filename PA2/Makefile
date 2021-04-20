@@ -33,7 +33,8 @@ run: $(.DEFAULT_GOAL)
 # bash run_bfs_omp.sh
 
 rrun: $(.DEFAULT_GOAL)
-	srun -N $(N) -n $(n) $< /home/course/hpc/assignments/2021/PA2/graph/$(graph)
+	bash ./run_bfs_mpi.sh
+	# srun -N $(N) -n $(n) $< /home/course/hpc/assignments/2021/PA2/graph/$(graph)
 
 .DEFAULT_GOAL=bfs_omp_mpi
 

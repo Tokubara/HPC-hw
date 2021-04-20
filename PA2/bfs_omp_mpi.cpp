@@ -55,6 +55,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
     // {{{2 矩阵运算
     update = false;
     memset(new_xk, 0, sizeof(bool) * row_num);
+#pragma omp parallel for
     for (int i = 0; i < row_num; i++) { //? 这个循环范围应该是什么, 是end, 注意, 得到的结果的向量长度是与终点范围一样多的
       // [endp_st, endp_end)
       // 外层循环, 计算new_xk[i]
@@ -83,6 +84,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       MPI_Reduce(new_xk, new_xk, row_num, MPI_C_BOOL, MPI_LOR, row_no, row_comm); // 接收方是对角线
     }
     if (col_no == row_no) {                                                        // 这就是leader
+#pragma omp parallel for
       for (int i = 0; i < row_num; i++) {
         // {{{2 leader更新visited, sol
         if (new_xk[i]) {

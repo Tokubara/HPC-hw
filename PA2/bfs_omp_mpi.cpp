@@ -49,7 +49,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   memset(visited, 0, sizeof(bool) * row_num);
   memset(sol->distances, -1, sizeof(int)*graph->num_nodes);
 
-  // 添加row_index_arr和send_buf
+  // {{{1 添加row_index_arr和send_buf
   int* row_index_arr;
   int* displace;
   int* send_buf;
@@ -65,6 +65,8 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   // {{{1 相当于第一次迭代, 设置xk和visited(就是src点)
   if(col_no==0) {
     xk[xk_len++]=ROOT_NODE_ID;
+  }
+  if(row_no==0) {
     visited[ROOT_NODE_ID] = true;
   }
   sol->distances[ROOT_NODE_ID] = 0; // 虽然其它的进程本来也不会负责这部分

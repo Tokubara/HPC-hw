@@ -55,13 +55,13 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   int* send_buf;
   bool update;
   int recvcount_sum;
-  if(col_no==row_no) {
+  // if(col_no==row_no) {
     row_index_arr = (int*)malloc(sizeof(int)*m_size);
     displace = (int*)malloc(sizeof(int)*m_size);
     send_buf = (int*)malloc(sizeof(int)*row_num*m_size); // 最坏可能是要*m_size, 但其余矩阵不是
-  } else {
-    send_buf = (int*)malloc(sizeof(int)*row_num);
-  }
+  // } else {
+  //   send_buf = (int*)malloc(sizeof(int)*row_num);
+  // }
   // {{{1 相当于第一次迭代, 设置xk和visited(就是src点)
   if(col_no==0) {
     xk[xk_len++]=ROOT_NODE_ID;
@@ -88,6 +88,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
         // TODO 看看这里visited设置好没有
         int outgoing = graph->outgoing_edges[neighbor];
         if(outgoing>=endp_st && outgoing < endp_end && !visited[outgoing-endp_st]) {
+          assert(new_xk_len<row_num);
           new_xk[new_xk_len++]=outgoing;
         }
       }
@@ -121,6 +122,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
     // xk_len不能是异步的吧, 否则接收方都不知道要接受多大
     MPI_Ibcast(send_buf, our_xk_len, MPI_INT, row_no, row_comm, &request_row); // send_buf用于设置visited
     if (col_no == row_no) {
+      assert(xk_len<=col_num);
       memcpy(xk,send_buf,xk_len*sizeof(int)); 
       for(int i = 0; i<xk_len; i++) {
         sol->distances[send_buf[i]]=iter;
@@ -130,6 +132,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
     MPI_Ibcast(xk, xk_len, MPI_INT, col_no, col_comm, &request_col); // TODO 看看改成异步的
     MPI_Wait(&request_row, MPI_STATUSES_IGNORE);
     for(int i = 0; i<our_xk_len; i++) {
+      assert(send_buf[i]-endp_st>=0&&send_buf[i]-endp_st<row_num);
       visited[send_buf[i]-endp_st]=true;
     }
     MPI_Wait(&request_col, MPI_STATUSES_IGNORE);
@@ -148,9 +151,9 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   free(xk);
   free(new_xk);
   free(visited);
-  if(col_no==row_no) {
+  // if(col_no==row_no) {
     free(row_index_arr);
     free(displace);
-  }
+  // }
   free(send_buf);
 }

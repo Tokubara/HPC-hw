@@ -36,7 +36,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   int stp_st = col_no * n_proc;
   int stp_end = stp_st + col_num; // 负责的始点的范围, 这是由列决定的, 右开
   int endp_st = row_no * n_proc;
-  // int endp_end = endp_st + row_num; // 负责的终点的范围, 右开, 没用上过
+  int endp_end = endp_st + row_num; // 负责的终点的范围, 右开, 没用上过
   // {{{1 创建xk, visited数组(长度与xk一样)
   bool* xk = (bool*)malloc(sizeof(bool) * col_num);         // 这里我开始写的是row_num
   memset(xk, 0, sizeof(bool) * col_num);                  //? 这里可不可以是sizeof(xk)?
@@ -47,9 +47,10 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   bool update = false;
   // {{{1 初始化xk和visited(就是src点), 相当于第一次迭代
   xk[ROOT_NODE_ID] = col_no == 0 ? true : false;
-  visited[ROOT_NODE_ID] = col_no == 0 ? true : false;
+  visited[ROOT_NODE_ID] = row_no == 0 ? true : false;
   sol->distances[ROOT_NODE_ID] = 0;
   int iter = 1;
+  MPI_Request request = MPI_REQUEST_NULL;
   // {{{1 while循环
   while (true) {
     // {{{2 矩阵运算
@@ -61,13 +62,15 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       // 外层循环, 计算new_xk[i]
       if (visited[i])
         continue;
-      int start_edge = graph->incoming_starts[i + endp_st]; // 注意, 这个地方错了的
-      int end_edge = (i + endp_st == graph->num_nodes - 1) ? graph->num_edges : graph->incoming_starts[i + endp_st + 1];
+      int tmp = i + endp_st;
+      int start_edge = graph->incoming_starts[tmp]; // 注意, 这个地方错了的
+      int end_edge = (tmp == graph->num_nodes - 1) ? graph->num_edges : graph->incoming_starts[tmp + 1];
       for (int neighbor = start_edge; neighbor < end_edge; neighbor++) {
         int incoming = graph->incoming_edges[neighbor];                              // incoming是起点
         if (incoming >= stp_st && incoming < stp_end && xk[incoming - stp_st]) { // 如果这样写条件判断, 好像就不需要每次让xk为0,1向量了, >0就行了
           new_xk[i] = true;
           update = true;
+          sol->distances[i+endp_st] = iter;          
           break;
         }
       }
@@ -78,35 +81,24 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       break;
     }
     // {{{2 new_xk和distance, 还有visited的维护
-    if(col_no==row_no) {
-      MPI_Reduce(MPI_IN_PLACE, new_xk, row_num, MPI_C_BOOL, MPI_LOR, row_no, row_comm); // 接收方是对角线
-    } else {
-      MPI_Reduce(new_xk, new_xk, row_num, MPI_C_BOOL, MPI_LOR, row_no, row_comm); // 接收方是对角线
-    }
-    if (col_no == row_no) {                                                        // 这就是leader
-#pragma omp parallel for
-      for (int i = 0; i < row_num; i++) {
-        // {{{2 leader更新visited, sol
-        if (new_xk[i]) {
-          ASSERT(!visited[i]);
-          visited[i] = true;
-          sol->distances[i + endp_st] = iter; //? 这里会不会有data race?我觉得不会
-        }
-      }
-      // TODO 也可以考虑先allreduce, 再每一个计算
+    // if(col_no==row_no) {
+    MPI_Allreduce(MPI_IN_PLACE, new_xk, row_num, MPI_C_BOOL, MPI_LOR, row_comm); // 接收方是对角线, TODO
+    if (col_no == row_no) {
       memcpy(xk, new_xk, sizeof(bool) * row_num);
-          // TODO Bcast visited
-          // {{{2 leader bcast send
     }
-      MPI_Bcast(visited, row_num, MPI_C_BOOL, row_no, row_comm); //? 这个地方总感觉有错?
-      MPI_Bcast(xk, col_num, MPI_C_BOOL, col_no, col_comm); //? 这个地方总感觉有错?
-      iter++;
+    MPI_Ibcast(xk, col_num, MPI_C_BOOL, col_no, col_comm, &request); // TODO
+#pragma omp parallel for
+    for (int i = 0; i < row_num; i++) {
+        visited[i] |= new_xk[i];
+    }
+    iter++;
+     MPI_Wait(&request, MPI_STATUS_IGNORE);
   }
-  // {{{1 gatherv
+  // {{{1 sol->distances
   if(rank==ROOT_NODE_ID) {
-    MPI_Reduce(MPI_IN_PLACE, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, diag_comm); // 接收方是对角线
+    MPI_Reduce(MPI_IN_PLACE, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
   } else if(col_no==row_no) {
-    MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, diag_comm); // 接收方是对角线
+    MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
   }
   // {{{1 清理工作
   MPI_Comm_free(&row_comm);

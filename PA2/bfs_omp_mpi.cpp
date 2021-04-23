@@ -96,9 +96,9 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   }
   // {{{1 sol->distances
   if(rank==ROOT_NODE_ID) {
-    MPI_Reduce(MPI_IN_PLACE, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
-  } else if(col_no==row_no) {
-    MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
+    MPI_Reduce(MPI_IN_PLACE, sol->distances, graph->num_nodes, MPI_UNSIGNED, MPI_MIN, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
+  } else {
+    MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_UNSIGNED, MPI_MIN, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
   }
   // {{{1 清理工作
   MPI_Comm_free(&row_comm);

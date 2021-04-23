@@ -13,9 +13,15 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   int rank, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);  
+
   // MPI初始化已经做过了
   // TODO: 正确性测试的时候, 进程数可能是任意, 这样就会有问题, 这个地方需要修改, 还要考虑进程通信能不能进行
   int m_size = sqrt(nprocs); // 进程矩阵大小
+  int real_world_color=rank<m_size*m_size;
+  MPI_Comm real_world_comm;
+  MPI_Comm_split(MPI_COMM_WORLD, real_world_color, rank, &real_world_comm);
+  if(rank<m_size*m_size) {
+
   // {{{1 MPI划分行列通信域
   // 矩阵排列大概是这样:
   // 0 1 2 3
@@ -23,10 +29,10 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   int col_no = rank % m_size; // 这也是col_color
   int row_no = rank / m_size; // 这也是row_color
   MPI_Comm col_comm, row_comm, diag_comm;
-  MPI_Comm_split(MPI_COMM_WORLD, col_no, row_no, &col_comm); // 注意这里的key并不是原来的rank, 而是行号, 也就是说, 应该在0到m_size之间, split以后, 都以为自己在这个通信域中, 只是不同的进程, 这个变量中包含的进程不同
-  MPI_Comm_split(MPI_COMM_WORLD, row_no, col_no, &row_comm);
+  MPI_Comm_split(real_world_comm, col_no, row_no, &col_comm); // 注意这里的key并不是原来的rank, 而是行号, 也就是说, 应该在0到m_size之间, split以后, 都以为自己在这个通信域中, 只是不同的进程, 这个变量中包含的进程不同
+  MPI_Comm_split(real_world_comm, row_no, col_no, &row_comm);
   int diag_color=col_no==row_no;
-  MPI_Comm_split(MPI_COMM_WORLD, diag_color, col_no, &diag_comm);
+  MPI_Comm_split(real_world_comm, diag_color, col_no, &diag_comm);
 
   // {{{1 本进程矩阵大小, 和负责的点的范围
   int n_proc = (graph->num_nodes + m_size - 1) / m_size; // 每行每列进程最多负责的点数, 但是最后一行/列进程负责的点数不一样多
@@ -73,7 +79,7 @@ void bfs_omp_mpi(Graph graph, solution* sol)
       }
     }
     // 是否退出的逻辑
-    MPI_Allreduce(MPI_IN_PLACE, &update, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &update, 1, MPI_C_BOOL, MPI_LOR, real_world_comm);
     if (!update) {
       break;
     }
@@ -115,4 +121,5 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   free(xk);
   free(new_xk);
   free(visited);
+  }
 }

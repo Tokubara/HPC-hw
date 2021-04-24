@@ -181,5 +181,16 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
   } else {
     MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
   }
+
+  int* recvcounts = (int*)malloc(nprocs*sizeof(int));
+  int* displs = (int*)malloc(nprocs*sizeof(int));
+  recvcounts[0]=my_end-my_start;
+  for(int i = 1; i < nprocs; i++) {
+    recvcounts[i]=my_end-my_start;
+    displs[i]=displs[i-1]+recvcounts[i-1];
+  }
+  MPI_Gatherv(distances+my_start, my_end-my_start, MPI_INT, distances, recvcounts, displs, MPI_INT, ROOT_NODE_ID, MPI_COMM_WORLD);
   free(frontier);
+  free(recvcounts);
+  free(displs);
 }

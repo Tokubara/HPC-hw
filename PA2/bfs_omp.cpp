@@ -8,15 +8,26 @@
 #define ROOT_NODE_ID 0
 #define NOT_VISITED_MARKER -1
 
+bool bfs_bottom_up_step(int iteration, Graph graph, int* frontier);
+
 void bfs_bottom_up(graph* graph, solution* sol) {
     int iteration = 1;
     // {{{2 初始化
     int* frontier=sol->distances; 
 		memset(frontier,0xff,sizeof(int) * graph->num_nodes);
     frontier[ROOT_NODE_ID] = 0;
-    bool update = true;
-    while (update) {
-        update = false;
+    // bool update = true;
+    while (bfs_bottom_up_step(iteration, graph, frontier)) {
+        // if(!update) {
+        //   break;
+        // }
+        iteration++;
+    }
+}
+
+bool bfs_bottom_up_step(int iteration, Graph graph, int* frontier) {
+        bool update = false;
+        int padding[15];
         #pragma omp parallel for reduction(|:update)
         for (int i=0; i < graph->num_nodes; i++) {                   
             if (frontier[i] == NOT_VISITED_MARKER) {
@@ -31,12 +42,8 @@ void bfs_bottom_up(graph* graph, solution* sol) {
                     }
                 }
             }
-        }
-        // if(!update) {
-        //   break;
-        // }
-        iteration++;
-    }
+        }  
+        return update;
 }
 
 void bfs_top_down(graph* graph, solution* sol) {

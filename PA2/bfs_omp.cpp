@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ROOT_NODE_ID                    0
-#define NOT_VISITED_MARKER              -1
+#define ROOT_NODE_ID 0
+#define NOT_VISITED_MARKER -1
 
 void bfs_bottom_up(graph* graph, solution* sol) {
     int iteration = 1;
@@ -16,6 +16,7 @@ void bfs_bottom_up(graph* graph, solution* sol) {
     frontier[ROOT_NODE_ID] = 0;
     bool update = true;
     while (update) {
+        update = false;
         #pragma omp parallel for reduction(|:update)
         for (int i=0; i < graph->num_nodes; i++) {                   
             if (frontier[i] == NOT_VISITED_MARKER) {
@@ -47,6 +48,7 @@ void bfs_top_down(graph* graph, solution* sol) {
     bool update = true;
 
     while (update) {
+        update = false;
         #pragma omp parallel for reduction(|:update)
         for (int i=0; i < graph->num_nodes; i++) {   
             if (frontier[i] == iteration-1) {
@@ -57,6 +59,7 @@ void bfs_top_down(graph* graph, solution* sol) {
                     int outgoing = graph->outgoing_edges[neighbor];
                     if(frontier[outgoing] == NOT_VISITED_MARKER) {  
                         frontier[outgoing] = iteration;
+                        update = true;
                     }
                 }
             }

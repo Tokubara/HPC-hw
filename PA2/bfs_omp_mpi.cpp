@@ -123,3 +123,52 @@ void bfs_omp_mpi(Graph graph, solution* sol)
   free(visited);
   }
 }
+
+void bfs_omp_mpi_1d(Graph graph, solution* sol)
+{
+  int rank, nprocs;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);  
+    vertex_set list1;
+    vertex_set_init(&list1, graph->num_nodes); // fronter
+    int iteration = 1;
+    vertex_set* frontier = &list1; 
+    memset(frontier->vertices, 0, sizeof(int) * graph->num_nodes); // 看框架, 感觉这是不需要的, 而且似乎可以直接用sizeof(graph->num_nodes)
+		memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
+    // setup frontier with the root node    
+    // just like put the root into queue
+    frontier->vertices[frontier->count++] = 1; // 意思是说, 0号点, 对应的iter是1
+
+    // set the root distance with 0
+    sol->distances[ROOT_NODE_ID] = 0;
+    // 计算负责的范围[my_start,my_end), 其中0号进程少负责一些
+    int n_proc = (graph->num_nodes+nprocs-1)/nprocs; // 那要负责的最多点数就是这么多
+    int n_min = graph->num_nodes%n_proc; // 唯一一个负责的点数比较少的
+    int my_start = n_proc*rank;
+    int my_end=(rank==nrpocs-1)?graph->num_nodes:(rank+1)*n_proc;
+
+    // 改改名字
+    Graph g = graph;
+    int* distances = sol->distances;
+    while (true) {
+    #pragma omp parallel for
+        for (int i=my_start; i < my_end; i++) {                   
+            if (frontier->vertices[i] == BOTTOMUP_NOT_VISITED_MARKER) {
+                int start_edge = g->incoming_starts[i];
+                int end_edge = (i == g->num_nodes-1)? g->num_edges : g->incoming_starts[i + 1];
+                for(int neighbor = start_edge; neighbor < end_edge; neighbor++) {
+                    int incoming = g->incoming_edges[neighbor]; // incoming是起点
+                    if(frontier->vertices[incoming] == iteration) {
+                        distances[i] = distances[incoming] + 1;                        
+                        frontier->vertices[i] = iteration + 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 进行通信, 发送vertices
+        MPI_Allreduce (MPI_IN_PLACE, frontier->vertices, graph->num_nodes, MPI_INIT, MPI_MAX,MPI_COMM_WORLD);
+        iteration++;
+    }
+}

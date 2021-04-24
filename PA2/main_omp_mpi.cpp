@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
     }
     puts("no difference");
   }
+  // puts("send correct");
   MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
   if (correct != 1) {
     MPI_Finalize(); // 也就是说, MPI_Finalize必须是在多个进程中调用的
@@ -91,6 +92,7 @@ int main(int argc, char **argv) {
 
   int repeat = 2;
   unsigned long total_time = 0.0;
+  // puts("bench");
   for (int i = 0; i < repeat; ++i) {
     timeval start, end;
     MPI_Barrier(MPI_COMM_WORLD);

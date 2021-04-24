@@ -149,6 +149,10 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
     // 改改名字
     Graph g = graph;
     int* distances = sol->distances;
+    MPI_Request* requests = (MPI_Request*)malloc(nprocs*sizeof(MPI_Request));
+    for(int i = 0; i<nprocs;i++) {
+      requests[i]=MPI_REQUEST_NULL;
+    }
     while (true) {
      bool update = false;
     #pragma omp parallel for reduction(|:update)
@@ -174,10 +178,11 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
         }
         // 进行通信, 发送vertices
         // MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for(int i = 0; i<nprocs;i++) {
-        MPI_Bcast(frontier+n_proc*i,(i==nprocs-1)?n_min:n_proc,MPI_INT, i, MPI_COMM_WORLD);
+        MPI_Ibcast(frontier+n_proc*i,(i==nprocs-1)?n_min:n_proc,MPI_INT, i, MPI_COMM_WORLD, &requests[i]);
         }
+        MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
         iteration++;
     }
   // {{{1 sol

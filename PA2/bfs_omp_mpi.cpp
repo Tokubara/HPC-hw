@@ -130,15 +130,16 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);  
     int iteration = 1;
-    int* frontier = (int*)malloc(graph->num_nodes*sizeof(int)); 
-    memset(frontier, 0, sizeof(int) * graph->num_nodes);
+    // int* frontier = (int*)malloc(graph->num_nodes*sizeof(int)); 
+    // memset(frontier, 0, sizeof(int) * graph->num_nodes);
 		memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
+    int* frontier=sol->distances;
     // setup frontier with the root node    
     // just like put the root into queue
-    frontier[ROOT_NODE_ID] = 1; // 意思是说, 0号点, 对应的iter是1
+    frontier[ROOT_NODE_ID] = 0; // 意思是说, 0号点, 对应的iter是1
 
     // set the root distance with 0
-    sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
+    // sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
     // {{{1 计算负责的范围[my_start,my_end), 其中最后一个进程少负责一些
     int n_proc = (graph->num_nodes+nprocs-1)/nprocs; // 那要负责的最多点数就是这么多
     int n_min = graph->num_nodes-(nprocs-1)*n_proc; // 唯一一个负责的点数比较少的
@@ -157,7 +158,7 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
      bool update = false;
     #pragma omp parallel for reduction(|:update)
         for (int i=my_start; i < my_end; i++) {                   
-            if (frontier[i] == 0) {
+            if (frontier[i] == -1) {
                 int start_edge = g->incoming_starts[i];
                 int end_edge = (i == g->num_nodes-1)? g->num_edges : g->incoming_starts[i + 1];
                 for(int neighbor = start_edge; neighbor < end_edge; neighbor++) {
@@ -165,7 +166,7 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
                     if(frontier[incoming] == iteration) {
                         distances[i] = iteration;                    // 我感觉这个地方似乎也可以直接用iteration表示 // 会不会distances[incoming]为-1, 这样就可以为0了
                         update = true;
-                        frontier[i] = iteration + 1;
+                        frontier[i] = iteration;
                         break;
                     }
                 }
@@ -186,11 +187,11 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
         iteration++;
     }
   // {{{1 sol
-  if(rank==ROOT_NODE_ID) {
-    MPI_Reduce(MPI_IN_PLACE, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
-  } else {
-    MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
-  }
+  // if(rank==ROOT_NODE_ID) {
+  //   MPI_Reduce(MPI_IN_PLACE, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
+  // } else {
+  //   MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
+  // }
 
   // int* recvcounts = (int*)malloc(nprocs*sizeof(int));
   // int* displs = (int*)malloc(nprocs*sizeof(int));

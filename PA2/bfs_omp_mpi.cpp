@@ -139,7 +139,7 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
 
     // set the root distance with 0
     sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
-    // 计算负责的范围[my_start,my_end), 其中最后一个进程少负责一些
+    // {{{1 计算负责的范围[my_start,my_end), 其中最后一个进程少负责一些
     int n_proc = (graph->num_nodes+nprocs-1)/nprocs; // 那要负责的最多点数就是这么多
     // int n_min = graph->num_nodes%n_proc; // 唯一一个负责的点数比较少的
     int my_start = n_proc*rank;
@@ -152,14 +152,13 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
      bool update = false;
     #pragma omp parallel for reduction(|:update)
         for (int i=my_start; i < my_end; i++) {                   
-            if (frontier[i] == NOT_VISITED_MARKER) {
+            if (frontier[i] == 0) {
                 int start_edge = g->incoming_starts[i];
                 int end_edge = (i == g->num_nodes-1)? g->num_edges : g->incoming_starts[i + 1];
                 for(int neighbor = start_edge; neighbor < end_edge; neighbor++) {
                     int incoming = g->incoming_edges[neighbor]; // incoming是起点
                     if(frontier[incoming] == iteration) {
-                        distances[i] = distances[incoming] + 1;                    // 我感觉这个地方似乎也可以直接用iteration表示
-
+                        distances[i] = iteration;                    // 我感觉这个地方似乎也可以直接用iteration表示 // 会不会distances[incoming]为-1, 这样就可以为0了
                         update = true;
                         frontier[i] = iteration + 1;
                         break;
@@ -182,4 +181,5 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
   } else {
     MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
   }
+  free(frontier);
 }

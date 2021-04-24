@@ -1,4 +1,4 @@
-override CXXFLAGS += -std=c++17 -fopenmp -O2 -g3 -Wall -Wextra -pedantic
+override CXXFLAGS += -std=c++17 -fopenmp -O0 -g3 -Wall -Wextra -pedantic
 
 headers := $(wildcard *.h)
 common_src := bfs_common.cpp graph.cpp

@@ -14,17 +14,11 @@
 
 #define USE_BINARY_GRAPH 1 // 用二进制图格式, 还是文本图格式
 
-void bfs_top_down(Graph graph, solution *sol);
-void bfs_hybrid(Graph graph, solution *sol);
+// void bfs_top_down(Graph graph, solution *sol);
 void bfs_bottom_up(Graph graph, solution *sol);
+void bfs_top_down(Graph graph, solution *sol);
 
-#if M==1
-#define bfs_omp bfs_bottom_up
-#elif M==2
-#define bfs_omp bfs_hybrid
-#else
 #define bfs_omp bfs_top_down
-#endif
 
 #define literal(x) #x
 

@@ -136,7 +136,7 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
     int* frontier=sol->distances;
     // setup frontier with the root node    
     // just like put the root into queue
-    frontier[ROOT_NODE_ID] = 0; // 意思是说, 0号点, 对应的iter是1
+    frontier[ROOT_NODE_ID] = 0; // 意思是说, 0号点, 对应的iter是0
 
     // set the root distance with 0
     // sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
@@ -149,7 +149,7 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
 
     // 改改名字
     Graph g = graph;
-    int* distances = sol->distances;
+    // int* distances = sol->distances;
     MPI_Request* requests = (MPI_Request*)malloc(nprocs*sizeof(MPI_Request));
     for(int i = 0; i<nprocs;i++) {
       requests[i]=MPI_REQUEST_NULL;
@@ -163,8 +163,8 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
                 int end_edge = (i == g->num_nodes-1)? g->num_edges : g->incoming_starts[i + 1];
                 for(int neighbor = start_edge; neighbor < end_edge; neighbor++) {
                     int incoming = g->incoming_edges[neighbor]; // incoming是起点
-                    if(frontier[incoming] == iteration) {
-                        distances[i] = iteration;                    // 我感觉这个地方似乎也可以直接用iteration表示 // 会不会distances[incoming]为-1, 这样就可以为0了
+                    if(frontier[incoming] == iteration-1) {
+                        // distances[i] = iteration;                    // 我感觉这个地方似乎也可以直接用iteration表示 // 会不会distances[incoming]为-1, 这样就可以为0了
                         update = true;
                         frontier[i] = iteration;
                         break;
@@ -204,5 +204,5 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
   // free(recvcounts);
   // free(displs);
 
-  free(frontier);
+  // free(frontier);
 }

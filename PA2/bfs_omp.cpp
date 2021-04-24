@@ -26,9 +26,10 @@ void bfs_bottom_up(graph* graph, solution* sol) {
 }
 
 bool bfs_bottom_up_step(int iteration, Graph graph, int* frontier) {
-        bool update = false;
+        // bool update = false;
+        int local_count = 0;
         int padding[15];
-        #pragma omp parallel for reduction(|:update)
+        #pragma omp parallel for reduction(+:local_count)
         for (int i=0; i < graph->num_nodes; i++) {                   
             if (frontier[i] == NOT_VISITED_MARKER) {
                 int start_edge = graph->incoming_starts[i];
@@ -36,14 +37,16 @@ bool bfs_bottom_up_step(int iteration, Graph graph, int* frontier) {
                 for(int neighbor = start_edge; neighbor < end_edge; neighbor++) {
                     int incoming = graph->incoming_edges[neighbor]; // incoming是起点
                     if(frontier[incoming] == iteration-1) {
-                        update=true;
+                        // update=true;
+                        local_count++;
                         frontier[i] = iteration;                        
                         break;
                     }
                 }
             }
         }  
-        return update;
+        // return update;
+        return local_count;
 }
 
 void bfs_top_down(graph* graph, solution* sol) {

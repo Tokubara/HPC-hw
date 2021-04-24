@@ -40,13 +40,13 @@ int main(int argc, char **argv) {
 
   Graph g;
 
-  if (rank == 0) {
-    printf("----------------------------------------------------------\n");
-    printf("Max system threads = %d\n", omp_get_max_threads());
-    printf("----------------------------------------------------------\n");
+  // if (rank == 0) {
+  //   printf("----------------------------------------------------------\n");
+  //   printf("Max system threads = %d\n", omp_get_max_threads());
+  //   printf("----------------------------------------------------------\n");
 
-    printf("Loading graph...\n");
-  }
+  //   printf("Loading graph...\n");
+  // }
   if (USE_BINARY_GRAPH) {
     g = load_graph_binary(graph_filename.c_str()); // 也就是说, 每个进程都有完整的图
   } else {
@@ -58,37 +58,37 @@ int main(int argc, char **argv) {
     MPI_Finalize();
     exit(1);
   }
-  if (rank == 0) {
-    printf("\n");
-    printf("Graph stats:\n");
-    printf("  Edges: %d\n", g->num_edges);
-    printf("  Nodes: %d\n", g->num_nodes);
-  }
+  // if (rank == 0) {
+  //   printf("\n");
+  //   printf("Graph stats:\n");
+  //   printf("  Edges: %d\n", g->num_edges);
+  //   printf("  Nodes: %d\n", g->num_nodes);
+  // }
 
   solution sol1;
   sol1.distances = (int *)malloc(sizeof(int) * g->num_nodes);
-  solution sol2;
-  sol2.distances = (int *)malloc(sizeof(int) * g->num_nodes);
-  int correct = 1;
-  bfs_omp_mpi(g, &sol1);
-  if (rank == 0) {
-    bfs_serial(g, &sol2);
-    for (int j = 0; j < g->num_nodes; j++) {
-      if (sol1.distances[j] != sol2.distances[j]) {
-        printf("*** Results disagree at %d: %d, %d\n", j, sol1.distances[j],
-               sol2.distances[j]);
-        correct = 0;
-        break;
-      }
-    }
-    puts("no difference");
-  }
+  // solution sol2;
+  // sol2.distances = (int *)malloc(sizeof(int) * g->num_nodes);
+  // int correct = 1;
+  // bfs_omp_mpi(g, &sol1);
+  // if (rank == 0) {
+  //   bfs_serial(g, &sol2);
+  //   for (int j = 0; j < g->num_nodes; j++) {
+  //     if (sol1.distances[j] != sol2.distances[j]) {
+  //       printf("*** Results disagree at %d: %d, %d\n", j, sol1.distances[j],
+  //              sol2.distances[j]);
+  //       correct = 0;
+  //       break;
+  //     }
+  //   }
+  //   puts("no difference");
+  // }
   // puts("send correct");
-  MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  if (correct != 1) {
-    MPI_Finalize(); // 也就是说, MPI_Finalize必须是在多个进程中调用的
-    exit(1);
-  }
+  // MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  // if (correct != 1) {
+  //   MPI_Finalize(); // 也就是说, MPI_Finalize必须是在多个进程中调用的
+  //   exit(1);
+  // }
 
   int repeat = 2;
   unsigned long total_time = 0.0;
@@ -104,7 +104,9 @@ int main(int argc, char **argv) {
         1000000.0 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
   }
   if (rank == 0)
-    printf("Average execution time of function bfs_omp_mpi is %lf ms.\n",
+    // printf("Average execution time of function bfs_omp_mpi is %lf ms.\n",
+    //        total_time / 1000.0 / repeat);
+    printf("%lf\n",
            total_time / 1000.0 / repeat);
 
   MPI_Finalize();

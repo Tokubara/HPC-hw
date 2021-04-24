@@ -145,7 +145,7 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
     int n_min = graph->num_nodes-(nprocs-1)*n_proc; // 唯一一个负责的点数比较少的
     int my_start = n_proc*rank;
     int my_end=(rank==nprocs-1)?graph->num_nodes:(rank+1)*n_proc;
-    int my_len=my_end-my_start;
+    // int my_len=my_end-my_start;
 
     // 改改名字
     Graph g = graph;

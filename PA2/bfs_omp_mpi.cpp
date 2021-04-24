@@ -154,6 +154,7 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
     for(int i = 0; i<nprocs;i++) {
       requests[i]=MPI_REQUEST_NULL;
     }
+    bool* all_update=(bool*)malloc(sizeof(bool)*nprocs);
     while (true) {
      bool update = false;
     #pragma omp parallel for reduction(|:update)
@@ -173,15 +174,20 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
             }
         }
 
-        MPI_Allreduce(MPI_IN_PLACE, &update, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
-        if(!update) {
+        MPI_Allgather(&update, 1, MPI_C_BOOL, all_update, 1, MPI_C_BOOL, MPI_COMM_WORLD);
+        bool count=0;
+        for(int i = 0; i<nprocs; i++) {
+          count+=all_update[i];
+        }
+        if(count==0) {
           break;
         }
         // 进行通信, 发送vertices
         // MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
         // #pragma omp parallel for
         for(int i = 0; i<nprocs;i++) {
-        MPI_Ibcast(frontier+n_proc*i,(i==nprocs-1)?n_min:n_proc,MPI_INT, i, MPI_COMM_WORLD, &requests[i]);
+          if(all_update[i])
+            MPI_Ibcast(frontier+n_proc*i,(i==nprocs-1)?n_min:n_proc,MPI_INT, i, MPI_COMM_WORLD, &requests[i]);
         }
         MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
         iteration++;

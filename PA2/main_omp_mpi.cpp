@@ -58,6 +58,9 @@ int main(int argc, char **argv) {
     MPI_Finalize();
     exit(1);
   }
+  solution sol1;
+  sol1.distances = (int *)malloc(sizeof(int) * g->num_nodes);
+
   // if (rank == 0) {
   //   printf("\n");
   //   printf("Graph stats:\n");
@@ -65,8 +68,6 @@ int main(int argc, char **argv) {
   //   printf("  Nodes: %d\n", g->num_nodes);
   // }
 
-  solution sol1;
-  sol1.distances = (int *)malloc(sizeof(int) * g->num_nodes);
   // solution sol2;
   // sol2.distances = (int *)malloc(sizeof(int) * g->num_nodes);
   // int correct = 1;
@@ -83,7 +84,6 @@ int main(int argc, char **argv) {
   //   }
   //   puts("no difference");
   // }
-  // puts("send correct");
   // MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
   // if (correct != 1) {
   //   MPI_Finalize(); // 也就是说, MPI_Finalize必须是在多个进程中调用的

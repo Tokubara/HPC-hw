@@ -141,9 +141,10 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
     sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
     // {{{1 计算负责的范围[my_start,my_end), 其中最后一个进程少负责一些
     int n_proc = (graph->num_nodes+nprocs-1)/nprocs; // 那要负责的最多点数就是这么多
-    // int n_min = graph->num_nodes%n_proc; // 唯一一个负责的点数比较少的
+    int n_min = graph->num_nodes%n_proc; // 唯一一个负责的点数比较少的
     int my_start = n_proc*rank;
     int my_end=(rank==nprocs-1)?graph->num_nodes:(rank+1)*n_proc;
+    int my_len=my_end-my_start;
 
     // 改改名字
     Graph g = graph;
@@ -172,7 +173,11 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
           break;
         }
         // 进行通信, 发送vertices
-        MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
+        // MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
+        #pragma omp parallel for
+        for(int i = 0; i<nprocs;i++) {
+        MPI_Bcast(frontier+n_proc*i,(i==nprocs-1)?n_min:n_proc,MPI_INT, i, MPI_COMM_WORLD);
+        }
         iteration++;
     }
   // {{{1 sol
@@ -182,15 +187,15 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
     MPI_Reduce(sol->distances, sol->distances, graph->num_nodes, MPI_INT, MPI_MAX, ROOT_NODE_ID, MPI_COMM_WORLD); // 接收方是对角线
   }
 
-  int* recvcounts = (int*)malloc(nprocs*sizeof(int));
-  int* displs = (int*)malloc(nprocs*sizeof(int));
-  recvcounts[0]=my_end-my_start;
-  for(int i = 1; i < nprocs; i++) {
-    recvcounts[i]=my_end-my_start;
-    displs[i]=displs[i-1]+recvcounts[i-1];
-  }
-  MPI_Gatherv(distances+my_start, my_end-my_start, MPI_INT, distances, recvcounts, displs, MPI_INT, ROOT_NODE_ID, MPI_COMM_WORLD);
+  // int* recvcounts = (int*)malloc(nprocs*sizeof(int));
+  // int* displs = (int*)malloc(nprocs*sizeof(int));
+  // recvcounts[0]=my_end-my_start;
+  // for(int i = 1; i < nprocs; i++) {
+  //   recvcounts[i]=my_end-my_start;
+  //   displs[i]=displs[i-1]+recvcounts[i-1];
+  // }
+  // free(recvcounts);
+  // free(displs);
+  // MPI_Gatherv(distances+my_start, my_end-my_start, MPI_INT, distances, recvcounts, displs, MPI_INT, ROOT_NODE_ID, MPI_COMM_WORLD);
   free(frontier);
-  free(recvcounts);
-  free(displs);
 }

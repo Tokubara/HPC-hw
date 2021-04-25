@@ -271,4 +271,10 @@ void bfs_omp_mpi_top_down(Graph graph, solution* sol)
         iteration++;
         MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
     }
+   
+        if(rank==0) {
+      MPI_Reduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_UNSIGNED,  MPI_MIN,0,MPI_COMM_WORLD);
+        } else {
+      MPI_Reduce (frontier, frontier, graph->num_nodes, MPI_UNSIGNED,  MPI_MIN,0,MPI_COMM_WORLD);
+        }
 }

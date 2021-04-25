@@ -124,6 +124,7 @@ void bfs_omp_mpi_2d(Graph graph, solution* sol)
   }
 }
 
+// {{{1 1d
 void bfs_omp_mpi_1d(Graph graph, solution* sol)
 {
   int rank, nprocs;
@@ -134,11 +135,8 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
     // memset(frontier, 0, sizeof(int) * graph->num_nodes);
 		memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
     int* frontier=sol->distances;
-    // setup frontier with the root node    
-    // just like put the root into queue
     frontier[ROOT_NODE_ID] = 0; // 意思是说, 0号点, 对应的iter是0
 
-    // set the root distance with 0
     // sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
     // {{{1 计算负责的范围[my_start,my_end), 其中最后一个进程少负责一些
     int n_proc = (graph->num_nodes+nprocs-1)/nprocs; // 那要负责的最多点数就是这么多
@@ -211,4 +209,61 @@ void bfs_omp_mpi_1d(Graph graph, solution* sol)
   // free(displs);
 
   // free(frontier);
+}
+
+
+void bfs_omp_mpi_top_down(Graph graph, solution* sol)
+{
+  int rank, nprocs;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);  
+    int iteration = 1;
+    // int* frontier = (int*)malloc(graph->num_nodes*sizeof(int)); 
+    // memset(frontier, 0, sizeof(int) * graph->num_nodes);
+		memset(sol->distances,0xff,sizeof(int) * graph->num_nodes);
+    int* frontier=sol->distances;
+    frontier[ROOT_NODE_ID] = 0; // 意思是说, 0号点, 对应的iter是0
+
+    // sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
+    // {{{1 计算负责的范围[my_start,my_end), 其中最后一个进程少负责一些
+    int n_proc = (graph->num_nodes+nprocs-1)/nprocs; // 那要负责的最多点数就是这么多
+    int my_start = n_proc*rank;
+    int my_end=(rank==nprocs-1)?graph->num_nodes:(rank+1)*n_proc;
+    // int my_len=my_end-my_start;
+
+    // int* distances = sol->distances;
+    while (true) {
+     bool update = false;
+    #pragma omp parallel for reduction(|:update)
+        for (int i=my_start; i < my_end; i++) {   
+            if (frontier[i] == iteration-1) {
+                int start_edge = graph->outgoing_starts[i];
+                int end_edge = (i == graph->num_nodes-1) ? graph->num_edges : graph->outgoing_starts[i+1];
+
+                for (int neighbor=start_edge; neighbor<end_edge; neighbor++) {
+                    int outgoing = graph->outgoing_edges[neighbor];
+                    if(frontier[outgoing] == NOT_VISITED_MARKER) {  
+                        frontier[outgoing] = iteration;
+                        update = true;
+                    }
+                }
+            }
+        }
+
+        MPI_Allreduce(MPI_IN_PLACE, &update, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD);
+        if(!update) {
+          break;
+        }
+      MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
+
+        // 进行通信, 发送vertices
+        // MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
+        // #pragma omp parallel for
+        // for(int i = 0; i<nprocs;i++) {
+        //   if(all_update[i])
+        //     MPI_Ibcast(frontier+n_proc*i,(i==nprocs-1)?n_min:n_proc,MPI_INT, i, MPI_COMM_WORLD, &requests[i]);
+        // }
+        // MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
+        iteration++;
+    }
 }

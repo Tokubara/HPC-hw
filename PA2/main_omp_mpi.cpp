@@ -62,34 +62,34 @@ int main(int argc, char **argv) {
   solution sol1;
   sol1.distances = (int *)malloc(sizeof(int) * g->num_nodes);
 
-  // if (rank == 0) {
-  //   printf("\n");
-  //   printf("Graph stats:\n");
-  //   printf("  Edges: %d\n", g->num_edges);
-  //   printf("  Nodes: %d\n", g->num_nodes);
-  // }
+  if (rank == 0) {
+    printf("\n");
+    printf("Graph stats:\n");
+    printf("  Edges: %d\n", g->num_edges);
+    printf("  Nodes: %d\n", g->num_nodes);
+  }
 
-  // solution sol2;
-  // sol2.distances = (int *)malloc(sizeof(int) * g->num_nodes);
-  // int correct = 1;
-  // bfs_omp_mpi(g, &sol1);
-  // if (rank == 0) {
-  //   bfs_serial(g, &sol2);
-  //   for (int j = 0; j < g->num_nodes; j++) {
-  //     if (sol1.distances[j] != sol2.distances[j]) {
-  //       printf("*** Results disagree at %d: %d, %d\n", j, sol1.distances[j],
-  //              sol2.distances[j]);
-  //       correct = 0;
-  //       break;
-  //     }
-  //   }
-  //   puts("no difference");
-  // }
-  // MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  // if (correct != 1) {
-  //   MPI_Finalize(); // 也就是说, MPI_Finalize必须是在多个进程中调用的
-  //   exit(1);
-  // }
+  solution sol2;
+  sol2.distances = (int *)malloc(sizeof(int) * g->num_nodes);
+  int correct = 1;
+  bfs_omp_mpi(g, &sol1);
+  if (rank == 0) {
+    bfs_serial(g, &sol2);
+    for (int j = 0; j < g->num_nodes; j++) {
+      if (sol1.distances[j] != sol2.distances[j]) {
+        printf("*** Results disagree at %d: %d, %d\n", j, sol1.distances[j],
+               sol2.distances[j]);
+        correct = 0;
+        break;
+      }
+    }
+    puts("no difference");
+  }
+  MPI_Bcast(&correct, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  if (correct != 1) {
+    MPI_Finalize(); // 也就是说, MPI_Finalize必须是在多个进程中调用的
+    exit(1);
+  }
 
   int repeat = 2;
   unsigned long total_time = 0.0;

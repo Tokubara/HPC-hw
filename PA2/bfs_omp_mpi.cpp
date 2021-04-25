@@ -260,18 +260,20 @@ void bfs_omp_mpi_top_down(Graph graph, solution* sol)
         if(!update) {
           break;
         }
+        // int* buffer = (int*)malloc((my_end-my_start)*sizeof(int));
       for(int i = 0; i < nprocs; i++) {
         if(rank==i) {
-      // MPI_Ireduce (MPI_IN_PLACE, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc , MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD, &requests[i]);
-      MPI_Reduce (MPI_IN_PLACE, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc , MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD);
+      MPI_Ireduce (MPI_IN_PLACE, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc , MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD, &requests[i]);
+      // MPI_Reduce (MPI_IN_PLACE, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc , MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD);
         } else {
-      // MPI_Ireduce (frontier+i*nprocs, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc, MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD, &requests[i]);
-      MPI_Reduce (frontier+i*nprocs, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc, MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD);
+      MPI_Ireduce (frontier+i*n_proc, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc, MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD, &requests[i]);
+      // MPI_Reduce (frontier+i*n_proc, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc, MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD);
         }
       }
+      // memcpy(frontier+my_start, buffer, my_end-my_start);
 
         iteration++;
-        // MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
+        MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
     }
    
         if(rank==0) {

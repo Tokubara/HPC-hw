@@ -227,17 +227,11 @@ void bfs_omp_mpi_top_down(Graph graph, solution* sol)
     // sol->distances[ROOT_NODE_ID] = 0; // 其实只要负责的设置了就行了
     // {{{1 计算负责的范围[my_start,my_end), 其中最后一个进程少负责一些
     int n_proc = (graph->num_nodes+nprocs-1)/nprocs; // 那要负责的最多点数就是这么多
-    int n_min = graph->num_nodes-n_proc*(nprocs-1);
     int my_start = n_proc*rank;
     int my_end=(rank==nprocs-1)?graph->num_nodes:(rank+1)*n_proc;
     // int my_len=my_end-my_start;
 
-  // int* distances = sol->distances;
-  //
-    MPI_Request* requests = (MPI_Request*)malloc(nprocs*sizeof(MPI_Request));
-    for(int i = 0; i<nprocs;i++) {
-      requests[i]=MPI_REQUEST_NULL;
-    }
+    // int* distances = sol->distances;
     while (true) {
      bool update = false;
     #pragma omp parallel for reduction(|:update)
@@ -260,25 +254,16 @@ void bfs_omp_mpi_top_down(Graph graph, solution* sol)
         if(!update) {
           break;
         }
-        // int* buffer = (int*)malloc((my_end-my_start)*sizeof(int));
-      for(int i = 0; i < nprocs; i++) {
-        if(rank==i) {
-      MPI_Ireduce (MPI_IN_PLACE, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc , MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD, &requests[i]);
-      // MPI_Reduce (MPI_IN_PLACE, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc , MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD);
-        } else {
-      MPI_Ireduce (frontier+i*n_proc, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc, MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD, &requests[i]);
-      // MPI_Reduce (frontier+i*n_proc, frontier+i*n_proc, (i==nprocs-1)?n_min:n_proc, MPI_UNSIGNED,  MPI_MIN,i,MPI_COMM_WORLD);
-        }
-      }
-      // memcpy(frontier+my_start, buffer, my_end-my_start);
+      MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
 
+        // 进行通信, 发送vertices
+        // MPI_Allreduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_INT, MPI_MAX,MPI_COMM_WORLD);
+        // #pragma omp parallel for
+        // for(int i = 0; i<nprocs;i++) {
+        //   if(all_update[i])
+        //     MPI_Ibcast(frontier+n_proc*i,(i==nprocs-1)?n_min:n_proc,MPI_INT, i, MPI_COMM_WORLD, &requests[i]);
+        // }
+        // MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
         iteration++;
-        MPI_Waitall(nprocs, requests, MPI_STATUS_IGNORE);
     }
-   
-        if(rank==0) {
-      MPI_Reduce (MPI_IN_PLACE, frontier, graph->num_nodes, MPI_UNSIGNED,  MPI_MIN,0,MPI_COMM_WORLD);
-        } else {
-      MPI_Reduce (frontier, frontier, graph->num_nodes, MPI_UNSIGNED,  MPI_MIN,0,MPI_COMM_WORLD);
-        }
 }

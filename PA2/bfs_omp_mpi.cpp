@@ -125,8 +125,7 @@ void bfs_omp_mpi_2d(Graph graph, solution* sol)
 }
 
 // {{{1 1d
-void bfs_omp_mpi_1d(Graph graph, solution* sol)
-{
+void bfs_omp_mpi_1d(Graph graph, solution* sol) {
   int rank, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);  

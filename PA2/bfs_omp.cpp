@@ -39,7 +39,8 @@ void bfs_bottom_up(graph* graph, solution* sol) {
     }
 }
 
-void bfs_top_down(graph* graph, solution* sol) {
+void bfs_omp(graph* graph, solution* sol) {
+// void bfs_top_down(graph* graph, solution* sol) {
     int iteration = 1;
     // {{{2 初始化
     int* frontier=sol->distances; 

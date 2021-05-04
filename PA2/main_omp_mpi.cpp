@@ -16,9 +16,10 @@
 #define USE_BINARY_GRAPH 1
 #define bfs_omp_mpi bfs_omp_mpi_top_down
 
-void bfs_omp_mpi_2d(Graph graph, solution *sol);
-void bfs_omp_mpi_1d(Graph graph, solution *sol);
-void bfs_omp_mpi_top_down(Graph graph, solution* sol);
+/* void bfs_omp_mpi_2d(Graph graph, solution *sol); */
+/* void bfs_omp_mpi_1d(Graph graph, solution *sol); */
+/* void bfs_omp_mpi_top_down(Graph graph, solution* sol); */
+void bfs_omp_mpi(Graph graph, solution* sol);
 
 int main(int argc, char **argv) {
 

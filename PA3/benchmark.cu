@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
         namespace ch = std::chrono;
         copyGraph(n, result, data);
         auto beg = ch::high_resolution_clock::now();
-        apsp(n, result);
+        apspRef(n, result);
         auto err = cudaDeviceSynchronize();
         auto end = ch::high_resolution_clock::now();
         if (err != cudaSuccess) {

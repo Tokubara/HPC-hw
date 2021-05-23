@@ -87,9 +87,10 @@ __global__ void blocked_fw_phase2(const int blockId, const int n, int* const gra
             newPath = cacheGraphBase[idy][u] + cacheGraph[u][idx];
 
             if (newPath < currentPath) {
-                cacheGraph[idy][idx] = newPath;
+                currentPath = newPath;
             }
 
+            cacheGraph[idy][idx] = currentPath;
             __syncthreads();
         }
     } else {
@@ -98,9 +99,10 @@ __global__ void blocked_fw_phase2(const int blockId, const int n, int* const gra
             newPath = cacheGraph[idy][u] + cacheGraphBase[u][idx];
 
             if (newPath < currentPath) {
-                cacheGraph[idy][idx] = newPath;
+                currentPath = newPath;
             }
 
+            cacheGraph[idy][idx] = currentPath;
             __syncthreads();
         }
     }
@@ -145,9 +147,10 @@ __global__ void blocked_fw_phase3(const int blockId, const int n, int* const gra
        for (int u = 0; u < BLOCK_SIZE; ++u) {
            newPath = cacheGraphBaseCol[idy][u] + cacheGraphBaseRow[u][idx];
            if (currentPath > newPath) {
-               graph[cellId] = newPath;
+               currentPath = newPath;
            }
        }
+       graph[cellId] = currentPath;
     } 
 }
 

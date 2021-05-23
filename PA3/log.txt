@@ -1,0 +1,20 @@
+alias out="rsync_all -m h -f ../PA3"
+alias in="rsync_all -m h -r -f PA3 -t ../"
+
+srun -N 1 ./benchmark 100
+
+16*16能过
+32*32能过
+128*128不能过
+对此\n 我的怀疑是\n 问题出在第3阶段
+
+~/PA3$ srun -N 1 ./benchmark 10000
+Validation Passed
+Time: 1727.052142 ms
+
+现在的问题是\n 合并结果\n 是
+
+echo -e "1000\n2500\n5000\n7500\n10000" > tmp.txt
+paste -d ' ' tmp.txt result_log.txt > result.txt
+awk -F ' ' '{OFS=FS=" ";speedup=$2/$3;$4="speedup=" speedup;print $0}' result.txt
+awk -i inplace  '{OFS=FS=" ";speedup=$2/$3;$4="speedup=" speedup;print $0}' result.txt

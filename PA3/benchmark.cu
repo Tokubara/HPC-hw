@@ -76,22 +76,6 @@ int main(int argc, char **argv) {
         apsp(n, result);
         CHK_CUDA_ERR(cudaDeviceSynchronize());
     }
-    double t = 0;
-    //? 这里好像是在测时间?
-    for (int i = 0; i < TIMER_ROUNDS; i++) {
-        namespace ch = std::chrono;
-        copyGraph(n, result, data);
-        auto beg = ch::high_resolution_clock::now();
-        apsp(n, result);
-        auto err = cudaDeviceSynchronize();
-        auto end = ch::high_resolution_clock::now();
-        if (err != cudaSuccess) {
-            fprintf(stderr, "CUDA Error\n");
-            exit(-1);
-        }
-        t += ch::duration_cast<ch::duration<double>>(end - beg).count() * 1000; // ms
-    }
-    t /= TIMER_ROUNDS;
 
     // 这里应该是检查正确性
     int *ref = allocGraph(n);
@@ -110,6 +94,23 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    double t = 0;
+    // 测时间
+    for (int i = 0; i < TIMER_ROUNDS; i++) {
+        namespace ch = std::chrono;
+        copyGraph(n, result, data);
+        auto beg = ch::high_resolution_clock::now();
+        apsp(n, result);
+        auto err = cudaDeviceSynchronize();
+        auto end = ch::high_resolution_clock::now();
+        if (err != cudaSuccess) {
+            fprintf(stderr, "CUDA Error\n");
+            exit(-1);
+        }
+        t += ch::duration_cast<ch::duration<double>>(end - beg).count() * 1000; // ms
+    }
+    t /= TIMER_ROUNDS;
     printf("Time: %f ms\n", t);
+
 }
 

@@ -8,13 +8,13 @@
 
 namespace { // 为什么要namespace?
 
-__global__ void kernel(int n, int k, int *graph) {
-    auto i = blockIdx.y * blockDim.y + threadIdx.y;
-    auto j = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n && j < n) {
-        graph[i * n + j] = min(graph[i * n + j], graph[i * n + k] + graph[k * n + j]);
-    }
-}
+// __global__ void kernel(int n, int k, int *graph) {
+//     auto i = blockIdx.y * blockDim.y + threadIdx.y;
+//     auto j = blockIdx.x * blockDim.x + threadIdx.x;
+//     if (i < n && j < n) {
+//         graph[i * n + j] = min(graph[i * n + j], graph[i * n + k] + graph[k * n + j]);
+//     }
+// }
 
 }
 
@@ -110,7 +110,7 @@ __global__ void blocked_fw_phase2(const int blockId, const int n, int* const gra
     }
 }
 
-__global__ void blocked_fw_phase2(const int blockId, const int n, int* const graph) {
+__global__ void blocked_fw_phase3(const int blockId, const int n, int* const graph) {
     if (blockIdx.x == blockId || blockIdx.y == blockId) return; // 前两个阶段的块
 
     const int idx = threadIdx.x;
@@ -159,9 +159,9 @@ void apsp(int n, /* device */ int *graph) { // graph是device内存上的
     dim3 dimBlockSize(BLOCK_SIZE, BLOCK_SIZE, 1);
 
     for (int blockID = 0; blockID < numBlock; ++blockID) {
-         blocked_fw_phase1<<<<<gridPhase1, dimBlockSize>>>(blockID, n, graph);
-         blocked_fw_phase2<<<<<gridPhase2, dimBlockSize>>>(blockID, n, graph);
-         blocked_fw_phase3<<<<<gridPhase2, dimBlockSize>>>(blockID, n, graph);
+         blocked_fw_phase1<<<gridPhase1, dimBlockSize>>>(blockID, n, graph);
+         blocked_fw_phase2<<<gridPhase2, dimBlockSize>>>(blockID, n, graph);
+         blocked_fw_phase3<<<gridPhase3, dimBlockSize>>>(blockID, n, graph);
     }
 }
 

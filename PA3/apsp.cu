@@ -3,7 +3,7 @@
 // Brute Force APSP Implementation:
 
 #include "apsp.h"
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 #define MAX_DISTANCE (1<<30-1)
 
 namespace { // 为什么要namespace?

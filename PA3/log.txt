@@ -18,3 +18,7 @@ echo -e "1000\n2500\n5000\n7500\n10000" > tmp.txt
 paste -d ' ' tmp.txt result_log.txt > result.txt
 awk -F ' ' '{OFS=FS=" ";speedup=$2/$3;$4="speedup=" speedup;print $0}' result.txt
 awk -i inplace  '{OFS=FS=" ";speedup=$2/$3;$4="speedup=" speedup;print $0}' result.txt
+
+srun -N 1 ./benchmark 10000
+
+paste -d ' ' result_ref_log.txt result_mine_32_log.txt |  awk '{OFS=FS=" ";speedup=$1/$2;print speedup}'

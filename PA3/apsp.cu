@@ -31,9 +31,9 @@ __global__ void blocked_fw_phase1(const int block_id, int n, int* const graph) {
     const int global_id = global_row_id * n + global_col_id; // 在graph中对应的对角块的索引
     cache_diag[idy][idx] = (global_row_id < n && global_col_id < n)?graph[global_id]:MAX_DISTANCE; // 处理右下角的对角块太小的问题, 避免越界
     #pragma unroll
-    for (int u = 0; u < BLOCK_SIZE; ++u) { // FW的外层循环
+    for (int k = 0; k < BLOCK_SIZE; ++k) { // FW的外层循环
         __syncthreads(); // 下一次循环前得同步
-        new_len = cache_diag[idy][u] + cache_diag[u][idx]; // new_len省掉能不能节省一点寄存器?
+        new_len = cache_diag[idy][k] + cache_diag[k][idx]; // new_len省掉能不能节省一点寄存器?
 
         if (new_len < cache_diag[idy][idx]) {
             cache_diag[idy][idx] = new_len;
@@ -77,8 +77,8 @@ __global__ void blocked_fw_phase2(const int block_id, const int n, int* const gr
 
     if (blockIdx.y == 0) { // 处理行块
         #pragma unroll
-        for (int u = 0; u < BLOCK_SIZE; ++u) {
-            new_len = cache_diag[idy][u] + cache_self[u][idx];
+        for (int k = 0; k < BLOCK_SIZE; ++k) {
+            new_len = cache_diag[idy][k] + cache_self[k][idx];
 
             if (new_len < cur_len) {
                 cur_len = new_len;
@@ -89,8 +89,8 @@ __global__ void blocked_fw_phase2(const int block_id, const int n, int* const gr
         }
     } else {
         #pragma unroll
-        for (int u = 0; u < BLOCK_SIZE; ++u) {
-            new_len = cache_self[idy][u] + cache_diag[u][idx];
+        for (int k = 0; k < BLOCK_SIZE; ++k) {
+            new_len = cache_self[idy][k] + cache_diag[k][idx];
 
             if (new_len < cur_len) {
                 cur_len = new_len;
@@ -132,8 +132,8 @@ __global__ void blocked_fw_phase3(const int block_id, const int n, int* const gr
        int new_len;
 
         #pragma unroll
-       for (int u = 0; u < BLOCK_SIZE; ++u) {
-           new_len = cache_col[idy][u] + cache_row[u][idx];
+       for (int k = 0; k < BLOCK_SIZE; ++k) {
+           new_len = cache_col[idy][k] + cache_row[k][idx];
            if (cur_len > new_len) {
                cur_len = new_len;
            } // 不需要同步, 因为用不上

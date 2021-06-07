@@ -48,14 +48,14 @@ int main(int argc, char** argv) {
         printf("mpi_pow: n = %d, m = %d, process_count = %d\n", n, m, comm_sz);
         fflush(stdout);
     }
-		// 创建a,b,0号进程创建,root_a,root_b,初始数据存在root_a中 {{{2
+		// 所有进程malloc a,b, 0号进程malloc root_a,root_b,初始数据存在root_a中 {{{2
     // 设置随机种子
     srand(seed);
 
     // 分配内存
-    int *a = new int[n / comm_sz]; // a只存部分
-    int *b = new int[n / comm_sz];
-    int *root_a, *root_b;
+    int *a = new int[n / comm_sz]; // a只存部分, 所有进程都有, 表示每个进程负责的部分
+    int *b = new int[n / comm_sz]; // b存每个进程处理a的结果
+    int *root_a, *root_b; // 只有进程0申请了root_a, root_b内存, root_a是整个待求pow的数据, root_b会存root_a的pow结果, 其它的进程只是有这个变量名
 
     // 进程 0 负责生成数组 a 的所有数据
     if (my_rank == 0) {
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     MPI_Barrier(MPI_COMM_WORLD);
     auto start = std::chrono::system_clock::now();
     
-    // 进程 i 获取进程 0 中位于 [my_rank * (n / comm_sz), (my_rank + 1) * (n / comm_sz)) 位置的数据
+    // {{{2 scatter 进程 i 获取进程 0 中位于 [my_rank * (n / comm_sz), (my_rank + 1) * (n / comm_sz)) 位置的数据
     MPI_Scatter( // MPI_Scatter (&sendbuf, sendcnt, sendtype, &recvbuf, recvcnt, recvtype, root, comm)
         root_a, n / comm_sz, MPI_INT, // send_buf_p, send_count, send_type
         a, n / comm_sz, MPI_INT,      // recv_buf_p, recv_count, recv_type
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     // 计算 b[i] = a[i]^(m)
     pow_a(a, b, n, m, comm_sz);
 
-    // 进程 0 收集各进程的运算结果
+    // {{{2 进程 0 收集各进程的运算结果
     MPI_Gather(
         b, n / comm_sz, MPI_INT,      // send_buf_p, send_count, send_type
         root_b, n / comm_sz, MPI_INT, // recv_buf_p, recv_count, recv_type
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     MPI_Barrier(MPI_COMM_WORLD);
     auto end = std::chrono::system_clock::now();
 
-    // 进程 0 检查结果并打印运行时间
+    // {{{2 进程 0 检查结果并打印运行时间
     if (my_rank == 0) {
         int to_check = std::min(n, 10);
         for (int c = 0; c < to_check; c++) {

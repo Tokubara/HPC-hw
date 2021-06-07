@@ -78,40 +78,40 @@ int main(int argc, char **argv) {
     }
 
     // 这里应该是检查正确性
-    // int *ref = allocGraph(n);
-    // copyGraph(n, ref, data);
-    // apspRef(n, ref);
-    // CHK_CUDA_ERR(cudaDeviceSynchronize());
-    // int *diff, diffHost = 0;
-    // CHK_CUDA_ERR(cudaMalloc(&diff, sizeof(int)));
-    // CHK_CUDA_ERR(cudaMemcpy(diff, &diffHost, sizeof(int), cudaMemcpyDefault)); // 也就是device的diff初始化为0, 我感觉要这样写还是因为kernel不能有返回值
-    // compareKernel<<<(n * n - 1) / 1024 + 1, 1024>>>(n * n, result, ref, diff);
-    // CHK_CUDA_ERR(cudaMemcpy(&diffHost, diff, sizeof(int), cudaMemcpyDefault));
-    // if (diffHost == 0) {
-    //     printf("Validation Passed\n");
-    // } else {
-    //     printf("WRONG ANSWER!!!\n");
-    //     exit(-1);
-    // }
-
-    double t = 0;
-    // 测时间
-    for (int i = 0; i < TIMER_ROUNDS; i++) {
-        namespace ch = std::chrono;
-        copyGraph(n, result, data);
-        auto beg = ch::high_resolution_clock::now();
-        apsp(n, result);
-        auto err = cudaDeviceSynchronize();
-        auto end = ch::high_resolution_clock::now();
-        if (err != cudaSuccess) {
-            fprintf(stderr, "CUDA Error\n");
-            exit(-1);
-        }
-        t += ch::duration_cast<ch::duration<double>>(end - beg).count() * 1000; // ms
+    int *ref = allocGraph(n);
+    copyGraph(n, ref, data);
+    apspRef(n, ref);
+    CHK_CUDA_ERR(cudaDeviceSynchronize());
+    int *diff, diffHost = 0;
+    CHK_CUDA_ERR(cudaMalloc(&diff, sizeof(int)));
+    CHK_CUDA_ERR(cudaMemcpy(diff, &diffHost, sizeof(int), cudaMemcpyDefault)); // 也就是device的diff初始化为0, 我感觉要这样写还是因为kernel不能有返回值
+    compareKernel<<<(n * n - 1) / 1024 + 1, 1024>>>(n * n, result, ref, diff);
+    CHK_CUDA_ERR(cudaMemcpy(&diffHost, diff, sizeof(int), cudaMemcpyDefault));
+    if (diffHost == 0) {
+        printf("Validation Passed\n");
+    } else {
+        printf("WRONG ANSWER!!!\n");
+        exit(-1);
     }
-    t /= TIMER_ROUNDS;
-    // printf("Time: %f ms\n", t);
-    printf("%f\n", t);
+
+    // double t = 0;
+    // // 测时间
+    // for (int i = 0; i < TIMER_ROUNDS; i++) {
+    //     namespace ch = std::chrono;
+    //     copyGraph(n, result, data);
+    //     auto beg = ch::high_resolution_clock::now();
+    //     apsp(n, result);
+    //     auto err = cudaDeviceSynchronize();
+    //     auto end = ch::high_resolution_clock::now();
+    //     if (err != cudaSuccess) {
+    //         fprintf(stderr, "CUDA Error\n");
+    //         exit(-1);
+    //     }
+    //     t += ch::duration_cast<ch::duration<double>>(end - beg).count() * 1000; // ms
+    // }
+    // t /= TIMER_ROUNDS;
+    // // printf("Time: %f ms\n", t);
+    // printf("%f\n", t);
 
 }
 

@@ -14,7 +14,7 @@
 #include "graph.h"
 
 #define USE_BINARY_GRAPH 1
-#define bfs_omp_mpi bfs_omp_mpi_top_down
+#define bfs_omp_mpi bfs_omp_mpi_bottom_up
 
 /* void bfs_omp_mpi_2d(Graph graph, solution *sol); */
 /* void bfs_omp_mpi_1d(Graph graph, solution *sol); */

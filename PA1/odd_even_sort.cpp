@@ -27,7 +27,7 @@ void Worker::sort() {
   // {{{1 设置odd_rank,even_rank, 也就是partner序号
   MPI_Status status;
   float * temp;
-  int odd_rank, even_rank;
+  int odd_rank, even_rank; // odd_rank是指(奇,偶)阶段的伙伴, even_rank是指(偶,奇)阶段的伙伴
 
   std::sort(data, data + block_len);
 
@@ -53,7 +53,7 @@ void Worker::sort() {
   float * partner_buffer = new float[ceiling(n, nprocs)]; // 这里可以用堆,也可以用栈,但是怀疑栈有上限,堆没有上限,那就用堆?
   temp = new float[block_len];
   // {{{1 迭代归并
-  for (int p = 0; p < nprocs - 1; p++) {
+  for (int p = 0; p < nprocs - 1; p++) { // 迭代次数是进程数-1
     // {{{2 收发数据, 存储data到temp, 为归并做准备
     size_t partner_len = (p % 2 == 1) ? odd_len : even_len;
     int partner_rank = (p % 2 == 1) ? odd_rank : even_rank;
